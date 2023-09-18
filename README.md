@@ -2,14 +2,19 @@
 
 ## Links
 ### Docs
-[Micropython.org](https://docs.micropython.org/en/latest/esp32/quickref.html)
+- [Micropython.org](https://docs.micropython.org/en/latest/esp32/quickref.html)
+- [M5Stack Core](https://docs.m5stack.com/en/core/basic)
 
 ### Hardware
-[M5Stack Core](https://shop.m5stack.com/products/esp32-basic-core-lot-development-kit-v2-7)
-[MPU6050](https://product.tdk.com/system/files/dam/doc/product/sensor/mortion-inertial/imu/data_sheet/mpu-6000-datasheet1.pdf?ref_disty=mouser)
+- [M5Stack Core](https://shop.m5stack.com/products/esp32-basic-core-lot-development-kit-v2-7)
+- [MPU6050](https://product.tdk.com/system/files/dam/doc/product/sensor/mortion-inertial/imu/data_sheet/mpu-6000-datasheet1.pdf?ref_disty=mouser)
 
 ### Helper
-[Webhook/REST Test](https://webhook.site/)
+
+- [Webhook/REST Test](https://webhook.site/)
+- [VSCode](https://code.visualstudio.com/)
+- [Platformio](https://platformio.org/)
+- [Thonny IDE](https://thonny.org/)
 
 
 ## Getting started
