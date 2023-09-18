@@ -3,9 +3,11 @@
 ## Links
 ### Docs
 - [Micropython.org](https://docs.micropython.org/en/latest/esp32/quickref.html)
+- [ESP32 D1](https://cdn.shopify.com/s/files/1/1509/1638/files/D1_Mini_ESP32_Datenblatt_AZ-Delivery_Vertriebs_GmbH.pdf?v=1604068666)
 - [M5Stack Core](https://docs.m5stack.com/en/core/basic)
 
 ### Hardware
+- [ESP32 D1](https://www.az-delivery.de/products/esp32-d1-mini)
 - [M5Stack Core](https://shop.m5stack.com/products/esp32-basic-core-lot-development-kit-v2-7)
 - [MPU6050](https://product.tdk.com/system/files/dam/doc/product/sensor/mortion-inertial/imu/data_sheet/mpu-6000-datasheet1.pdf?ref_disty=mouser)
 
