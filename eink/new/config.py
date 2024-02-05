@@ -1,2 +1,2 @@
-ssid= 'o2-WLAN66'
-pw = 'CTGMVQHZ9W3Z4K4V'
+ssid= 'ERROR303'
+pw = 'foobar404'
