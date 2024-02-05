@@ -15,8 +15,6 @@ def do_connect():
         print("wlan already is connected")
     print('network config:', wlan.ifconfig(), "\n\n")
 
-do_connect()
-
 def http_post(url, daten):
     
     import socket
@@ -37,5 +35,5 @@ def http_post(url, daten):
             break
     s.close()
 
-#url = "https://webhook.site/9ed8419d-f4fd-4090-947e-f964ef9dfe14"
-#http_post(url, "Das ist ein Test")
+
+do_connect()

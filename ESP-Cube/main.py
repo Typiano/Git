@@ -3,9 +3,10 @@ from machine import SoftI2C
 from machine import Pin, deepsleep
 from machine import sleep
 import mpu6050
+import urequests
 
 print("wait for start-interrupt")
-time.sleep(3)
+time.sleep(2)
 
 i2c = SoftI2C( scl=Pin(22), sda=Pin(21), freq=100000)     #initializing the I2C method for ESP32
 #i2c = I2C(scl=Pin(5), sda=Pin(4))       #initializing the I2C method for ESP8266
@@ -27,27 +28,30 @@ def getAnswer():
     #print(str(x) + "  " + str(y) + " " + str(z))
     
     if x >= 0.7 and -0.3 < y < 0.3 and -0.3 < z < 0.3:
-        ausgabewort = "1 oben"
+        ausgabewort = "1" # oben = oben
     elif x <= -0.7 and -0.3 < y < 0.3 and -0.3 < z < 0.3:
-        ausgabewort = "6 unten"
+        ausgabewort = "6"# unten = oben
     elif z <= -0.7 and -0.3 < y < 0.3 and -0.3 < x < 0.3:
-        ausgabewort = "4 links"
+        ausgabewort = "4"# links = oben
     elif z >= 0.7 and -0.3 < y < 0.3 and -0.3 < x < 0.3:
-        ausgabewort = "3 rechts"
+        ausgabewort = "3"# drei = oben
     elif y <= -0.7 and -0.3 < x < 0.3 and -0.3 < z < 0.3:
-        ausgabewort = "5 hinten"
+        ausgabewort = "5"# hinten = oben
     elif y >= 0.7 and -0.3 < x < 0.3 and -0.3 < z < 0.3:
-        ausgabewort = "2 vorne"
+        ausgabewort = "2"# vorne = oben
     else:
-        ausgabewort = "warte?"
+        ausgabewort = "0"# nicht konkretes = oben
     
     if ausgabewortalt == ausgabewort:
         pass
     else:
-        print(ausgabewort + "!\n")
         ausgabewortalt = ausgabewort
+        return ausgabewort
 
-getAnswer()
+Antwort = getAnswer() # Antwort = Rotatioszustand
+print(Antwort)
+url = "http://dog42.de:8000/stat/" + str(Antwort)
+urequests.post(url)
 
 p2.off()
-#deepsleep(2000)
+deepsleep(2000)
