@@ -3,19 +3,18 @@
 #esp.osdebug(None)
 #import webrepl
 #webrepl.start()
-
 def do_connect():
     import network
-    from config import ssid, pw
     wlan = network.WLAN(network.STA_IF)
-    wlan.active(False)
     wlan.active(True)
     if not wlan.isconnected():
         print('connecting to network...')
-        wlan.connect(ssid, pw)
+        wlan.connect('ERROR303', 'foobar404')
+        #wlan.connect("KH Gastzugang", "kanzleihofmann2015")
         while not wlan.isconnected():
             pass
-    print('network config:', wlan.ifconfig())
-    return True
+    else:
+        print("wlan already is connected")
+    print('network config:', wlan.ifconfig(), "\n\n")
 
-do_connect()
+#do_connect()

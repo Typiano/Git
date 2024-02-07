@@ -19,7 +19,7 @@ def load_data():
     f=open("data.dat","r")
     # print(f.read())
     data = ujson.load(f)
-    print("OLD DATA:", data)
+    # print("OLD DATA:", data)
     f.close()
     return data
 
@@ -45,11 +45,11 @@ def do_connect():
     wlan.active(True)
     if not wlan.isconnected():
         print('connecting to network...')
-        wlan.connect('ERROR303', 'foobar404')
+        wlan.connect(ssid, pw)
         #wlan.connect("KH Gastzugang", "kanzleihofmann2015")
         while not wlan.isconnected():
             pass
     else:
         print("wlan already is connected")
-    print('network config:', wlan.ifconfig(), "\n\n")
+    print('network config:', wlan.ifconfig(), "\n")
     return True
