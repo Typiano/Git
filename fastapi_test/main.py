@@ -1,47 +1,77 @@
 from fastapi import FastAPI, Path
 from typing_extensions import Annotated
 import sys
+import help
 print("Python version: " + sys.version)
-
 app = FastAPI()
 
-status = 0
-text = [ 
-        "Nothing",
-        "Hallo",
-        "Foo",
-        "Bar",
-        "This tutorial shows you how to use FastAPI with most of its features, step by step. Each section gradually builds on the previous ones, but it's structured to separate topics, so that you can go directly to any specific one to solve your specific API needs. It is also built to work as a future reference. So you can come back and see exactly what you need.",
-        "Hier könnte Ihre werbung stehen",
-        "1337"
-        ]
-
+Startdaten = help.load_data("Daten.dat")
+Temperatur = Startdaten["Temperatur"]
+status = Startdaten["status"]
+TempZusatznachricht = Startdaten["TempZusatznachricht"]
+text = Startdaten["text"]
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World!!!"}
+    return {"message": "Hello World!"}
 
 @app.get("/stat")
 async def ret_status():
     return {"status" : status}
 
-#@app.post("/stat/")
 @app.get("/stat/{val}")
 @app.post("/stat/{val}")
 async def set_status(val: Annotated[int, Path(ge=0, le=6)]):
-    global status
+    global status, Startdaten
     status = val
+    Startdaten["status"] = status
+    help.save_data(Startdaten, "Daten.dat")
     return {"status": status, "message" : "status changed to " + str(status)}
+
+@app.get("/tempstat")
+async def ret_stat_Temp():
+    global Temperatur, TempZusatznachricht
+    if Temperatur <= 0:
+        k = "kalt"
+    elif Temperatur <= 18:
+        k = "kuehl"
+    elif Temperatur <= 33:
+        k = "angenehm"
+    elif Temperatur < 50:
+        k = "heiss"
+    else:
+        k = "kochend"
+    return {"Temperatur": Temperatur, "TempZusatz": TempZusatznachricht[k]}
+
+@app.post("/tempstat/{temp}")
+@app.get("/tempstat/{temp}")
+async def set_stat_Temp(temp: Annotated[float, Path(ge=-50, le=100)]):
+    global Temperatur, TempZusatznachricht, Startdaten
+    Temperatur = temp
+    Startdaten["Temperatur"] = Temperatur
+    help.save_data(Startdaten, "Daten.dat")
+    if temp <= 0:
+        k = "kalt"
+    elif temp <= 18:
+        k = "kuehl"
+    elif temp <= 33:
+        k = "angenehm"
+    elif temp < 50:
+        k = "heiss"
+    else:
+        k = "kochend"
+    return {"Temperatur": Temperatur, "TempZusatz": TempZusatznachricht[k]}
+
 
 @app.get("/statustext")
 async def get_status_text():
     global text, status
-    return {"status": status, "message" : "Text for status " + str(status), "text": text[status] }
+    return {"status": status, "message" : "Text for status " + str(status), "text": text[str(status)] }
 
 @app.get("/text/{nmbr}")
 async def get_text(nmbr: Annotated[int, Path(ge=0, le=6)]):
-    global status
-    return {"status": status, "message" : "Text for status " + str(status), "text": text[nmbr] }
+    global status, text
+    return {"status": status, "message" : "Text for status " + str(status), "text": text[str(nmbr)] }
 
 
 
