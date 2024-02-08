@@ -66,7 +66,7 @@ async def set_stat_Temp(temp: Annotated[float, Path(ge=-50, le=100)]):
 @app.get("/statustext")
 async def get_status_text():
     global text, status
-    return {"status": status, "message" : "Text for status " + str(status), "text": text[str(status)] }
+    return {"status": status, "text": text[str(status)]}
 
 @app.get("/text/{nmbr}")
 async def get_text(nmbr: Annotated[int, Path(ge=0, le=6)]):

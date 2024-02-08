@@ -10,18 +10,25 @@ def blink(pin=2, cnt=3):
         p.on()
         sleep_ms(200)
 
-def save_data(data):
-    f=open("data.dat","w") # opens a file for writing.
+def save_data(data, name):
+    f=open(name,"w") # opens a file for writing.
     f.write(ujson.dumps(data))
     f.close()
 
-def load_data():
-    f=open("data.dat","r")
+def load_data(name):
+    f=open(name,"r")
     # print(f.read())
     data = ujson.load(f)
     # print("OLD DATA:", data)
     f.close()
     return data
+
+def hufuregel(text):
+    if len(str(text)*4) <=150:
+        zahl = len(str(text)*4)
+    else:
+        zahl = 150
+    return zahl
 
 def text_wrap(fb,str,x=0,y=0,color=0,w=80,h=10,border=None):
 	# optional box border
