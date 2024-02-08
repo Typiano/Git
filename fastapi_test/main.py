@@ -13,7 +13,7 @@ text = Startdaten["text"]
 
 @app.get("/")
 async def root():
-    return {"message": "Hello World!"}
+    return "Hello to the server, if u want so see the Funktions, write /docs"
 
 @app.get("/stat")
 async def ret_status():
