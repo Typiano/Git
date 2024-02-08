@@ -5,6 +5,7 @@ import mpu6050
 import urequests
 import helper
 
+
 print("wait for start-interrupt")
 time.sleep(1)
 
@@ -20,7 +21,7 @@ def getAnswer():
     x = round((wert1["AcX"]+wert2["AcX"]+wert3["AcX"])/16384/3, 2)
     y = round((wert1["AcY"]+wert2["AcY"]+wert3["AcY"])/16384/3, 2)
     z = round((wert1["AcZ"]+wert2["AcZ"]+wert3["AcZ"])/16384/3, 2)
-    Tmp = round((wert1["Tmp"]+wert2["Tmp"]+wert3["Tmp"])/3, 0)
+    Tmp = round(2*(wert1["Tmp"]+wert2["Tmp"]+wert3["Tmp"])/3, 0)/2 # um auf 0,5 zu Runden
     #print(str(x) + "  " + str(y) + " " + str(z))
     
     if x >= 0.7 and -0.3 < y < 0.3 and -0.3 < z < 0.3:
@@ -36,11 +37,16 @@ def getAnswer():
     elif y >= 0.7 and -0.3 < x < 0.3 and -0.3 < z < 0.3:
         ausgabewert = "2"# vorne = oben
     else:
-        ausgabewert = None# nicht konkretes = oben
+        ausgabewert = None# nichts konkretes = oben
     
     database = helper.load_data("RotInfo.dat")
     if database["Zustand"] == ausgabewert:
-        pass
+        if ausgabewert == "1": # damit die Temperatur immer übertragen wird in Zustand 1
+            if Tmp != database["Temperatur"]: # außer die Temperatur hat sich nicht signifikant geändert
+                database["Zustand"] = ausgabewert
+                database["Temperatur"] = Tmp
+                helper.save_data(database, "RotInfo.dat")
+                return ausgabewert, Tmp
     else:
         database["Zustand"] = ausgabewert
         database["Temperatur"] = Tmp
@@ -50,14 +56,20 @@ def getAnswer():
 
 Antwort = getAnswer() # Antwort = Rotatioszustand
 print(Antwort)
-if Antwort[0] != None:
-    helper.do_connect()
-    import config
-    url1 = config.Link + "/stat/" + str(Antwort[0])
-    url2 = config.Link + "/tempstat/" + str(Antwort[1])
-    urequests.post(url1)
-    urequests.post(url2)
-    print("Daten verschickt\n")
-    helper.blink(cnt = 1)
-    Pin(2, Pin.OUT).off()
+if Antwort != None:
+    if Antwort[0] != None:
+        helper.do_connect()
+        import config
+        url1 = config.Link + "/stat/" + str(Antwort[0])
+        url2 = config.Link + "/tempstat/" + str(Antwort[1])
+        urequests.post(url1)
+        urequests.post(url2)
+        print("Daten verschickt\n")
+        helper.blink(cnt = 1)
+        Pin(2, Pin.OUT).off()
+        if Antwort[0] == "6":
+            Zeit = 600000 # = 600s = 10 min
+        else:
+            Zeit = 4000
+        deepsleep(Zeit)
 deepsleep(2000)

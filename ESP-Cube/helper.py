@@ -49,6 +49,7 @@ def do_connect():
         #wlan.connect("KH Gastzugang", "kanzleihofmann2015")
         while not wlan.isconnected():
             pass
+        # print("connected")
     else:
         print("wlan already is connected")
     # print('network config:', wlan.ifconfig(), "\n\n")
