@@ -63,6 +63,22 @@ async def set_stat_Temp(temp: Annotated[float, Path(ge=-50, le=100)]):
     return {"Temperatur": Temperatur, "TempZusatz": TempZusatznachricht[k]}
 
 
+@app.get("/aenderstatustext{statusae}/{Ntext}")
+@app.post("/aenderstatustext{statusae}/{Ntext}")
+async def set_text_to_status(statusae: Annotated[int, Path(ge=0, le=6)], Ntext: str):
+    global Startdaten
+    Startdaten["text"][str(status)] =  Ntext
+    help.save_data(Startdaten, "Daten.dat")
+    return f"Dem Status {statusae} wurde der Text {Ntext} zugeordnet"
+
+@app.get("/aenderWettertext{Wstatus}/{NWtext}") # =WetterStatus bzw NeuerWetterText
+@app.post("/aenderWettertext{Wstatus}/{NWtext}")
+async def set_Wtext_to_Wstatus(Wstatus: str, NWtext: str):
+    global Startdaten
+    Startdaten["TempZusatznachricht"][Wstatus] =  NWtext
+    help.save_data(Startdaten, "Daten.dat")
+    return f"Dem Wetter-Status {Wstatus} wurde der Text {NWtext} zugeordnet"
+
 @app.get("/statustext")
 async def get_status_text():
     global text, status
