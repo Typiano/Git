@@ -57,12 +57,33 @@ def NeuesBild(datenlage, tempdatenlage):
             e.set_display_frame(None,buf)# hier drüber wird rot geschrieben
         else: 
             tnorm1, tnorm2 = datenlage["text"].split("SPLIT", 1)
+            tnormtemp = str(tempdatenlage["Temperatur"]) + " Grad Celsius"
+            tnormuhr = str(rtc[4]) + ":" + str(rtc[5]) + " Uhr"
+            helper.text_wrap(fb,str(tnorm1),round(w/2-helper.hufuregel(tnorm1)),50, black, w=300, h=100)
+            helper.text_wrap(fb,str(tnormuhr),round(w-helper.hufuregel(tnormuhr)*2-10),10, black, w=300, h=100)
+            helper.text_wrap(fb,str(tnormtemp),10 ,10, black, w=300, h=100)
             e.set_display_frame(buf,None)# hier drüber wird schwarz geschrieben
             fb.fill(white)
+            fb.rect(round(w/2-helper.hufuregel(tnorm2)-4), 170, helper.hufuregel(tnorm2)*2+8, 18, black)
+            helper.text_wrap(fb,str(tnorm2),round(w/2-helper.hufuregel(tnorm2)),175, black, w=300, h=100)
             e.set_display_frame(None, buf)# hier drüber wird rot geschrieben
         e.show_display_frame()
         e.sleep()
     else:
+        import framebuf
+        from htwk40x30 import htwk40x30
+        buf = bytearray(w * h // 8)
+        fb = framebuf.FrameBuffer(buf, w, h, framebuf.MONO_HLSB)
+        black = 0
+        white = 1
+        fb.fill(white)
+        e.set_display_frame(buf, buf)
+        fb.blit(framebuf.FrameBuffer(htwk40x30, 40, 30, framebuf.MONO_HLSB), 10,10, black)
+        e.set_display_frame(buf, None)# hier drüber wird rot geschrieben
+        e.show_display_frame()
+        del htwk40x30
+        e.sleep()
+                
         pass # hier das Bild einfügen...
     """
     import framebuf
@@ -133,4 +154,4 @@ if helper.do_connect():
 
 print('go to deep sleep')
 
-#machine.deepsleep(6000)
+machine.deepsleep(6000)
