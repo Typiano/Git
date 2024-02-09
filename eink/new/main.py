@@ -147,6 +147,7 @@ if helper.do_connect():
             print("status changed to: " + str(data["status"]))
             NeuesBild(datenlage, tempdatenlage)
         elif datenlage["status"] == 1 and tempdata["Temperatur"] != tempdatenlage["Temperatur"]:
+            print(tempdata["Temperatur"])
             tempdata = tempdatenlage # falls nur die Temperatur sich ändert
             NeuesBild(datenlage, tempdatenlage)
         elif data["status"] == 6:

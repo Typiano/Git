@@ -69,6 +69,8 @@ if Antwort != None:
         Pin(2, Pin.OUT).off()
         if Antwort[0] == "6":
             Zeit = 600000 # = 600s = 10 min
+            helper.blink(cnt = 10)
+            Pin(2, Pin.OUT).off()
         else:
             Zeit = 4000
         deepsleep(Zeit)
