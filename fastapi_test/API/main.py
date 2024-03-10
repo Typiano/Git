@@ -5,6 +5,9 @@ import help
 print("Python version: " + sys.version)
 app = FastAPI()
 
+def Bildsenden():
+    pass
+
 Startdaten = help.load_data("Daten.dat")
 Temperatur = Startdaten["Temperatur"]
 status = Startdaten["status"]
