@@ -2,8 +2,14 @@ from io import BytesIO
 from PIL import Image, ImageOps
 import sys
 from os import path as Path
+import os
 
-print(Path.abspath("."))
+def Dateipfadschreiben(name):
+    g = open(Path.abspath(".") + "/BilderfuerBeLL/" + "WelchesBild.txt", "w")
+    g.write(name + ".py")
+    g.close()
+    print(open(Path.abspath(".") + "/BilderfuerBeLL/" + "WelchesBild.txt").read())
+
 
 if len(sys.argv) == 4:
     path_to_image = str(sys.argv[1])
@@ -20,11 +26,14 @@ if len(sys.argv) == 4:
     byte_im = buf.getvalue()
     temp = len(str(x) + ' ' + str(y)) + 4
     print(byte_im[temp::])
-    f = open(Path.abspath(".") + "/" + outfile + ".py", "w")
+    if not Path.exists("BilderfuerBeLL"):
+        os.mkdir("BilderfuerBeLL")
+    f = open(Path.abspath(".") + "/BilderfuerBeLL/" + outfile + ".py", "w")
     f.write(outfile + " = bytearray(")
     f.write(str(byte_im[temp::]))
     f.write(")")
     f.close()
+    Dateipfadschreiben(outfile)
 
 else:
     print("please specify the location of image i.e img2bytearray.py image width heigh"
