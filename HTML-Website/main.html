@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Statuswürfel</title>
+    <style>
+        .headline {
+            color: #13a300;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .big {
+            font-size: 40px;
+            color: #FF0000;
+        }
+
+        .txt {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #1b1a1a;
+        }
+    </style>
+</head>
+
+<body>
+    <h2 class="headline">W I L K O M M E N</h2>
+    <h4 class="headline">zur Website des</h4>
+    <h1 class="headline big">S T A T U S W Ü R F E L S</h1>
+    <br><br>
+    <p class="txt">
+        <b>Derzeit:</b><br>
+        <i>Status: </i> <label id="Status">Hier steht eigendlich der Status</label><br>
+        <i>Text: </i> <label id="Text">Hier steht eigendlich der Text</label><br>
+        <i>[Temperatur: <label id="Temp">nicht auf Status 1</label> °C]</i><br>
+        <i>[Temperaturtext: <label id="TempText">nicht auf Status 1</label> ]</i>
+    </p>
+    <script>
+        /*function update() {}*/
+        async function reload() {
+            if (await statusupdate()){
+                Tempupdate()
+            }
+        }
+        /*setInterval(reload, 20000)*/
+
+        async function statusupdate() {
+            let link = linkerz("statustext")
+            let text =  await getText(link)
+            document.getElementById("Status").innerHTML = text["status"];
+            document.getElementById("Text").innerHTML = text["text"];
+            if (text["status"]=1){return true}
+            return false
+        }
+
+        async function Tempupdate(){
+            let link = linkerz("tempstat")
+            let text =  await getText(link)
+            document.getElementById("Temp").innerHTML = text["Temperatur"];
+            document.getElementById("TempText").innerHTML = text["TempZusatz"];
+        }
+
+        /*Linkgenerierung*/
+        function linkerz(urlplus) {
+            let url = "http://192.168.1.190:8000"
+            let link = url + "/" + urlplus
+            /*console.log(link)*/
+            return link
+        }
+
+        /* hier zuerst holen des derzeitigen Textes mit getText() */
+        /*getText("http://192.168.1.190:8000/statustext");*/
+
+        async function getText(link) {
+            let myObject = await fetch(link);
+            let myText = await myObject.json();
+            console.log(myText);
+            return myText
+        }
+        
+        reload()
+    </script>
+</body>
+
+</html>
