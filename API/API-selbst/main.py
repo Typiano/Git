@@ -81,7 +81,7 @@ async def set_stat_Temp(temp: Annotated[float, Path(ge=-50, le=100)]):
 @app.post("/aenderstatustext{statusae}/{Ntext}")
 async def set_text_to_status(statusae: Annotated[int, Path(ge=0, le=6)], Ntext: str):
     global Startdaten
-    Startdaten["text"][str(status)] =  Ntext
+    Startdaten["text"][str(statusae)] =  Ntext
     help.save_data(Startdaten, "Daten.dat")
     return f"Dem Status {statusae} wurde der Text {Ntext} zugeordnet"
 
@@ -101,7 +101,7 @@ async def get_status_text():
 @app.get("/text/{nmbr}")
 async def get_text(nmbr: Annotated[int, Path(ge=0, le=6)]):
     global status, text
-    return {"status": status, "message" : "Text for status " + str(status), "text": text[str(nmbr)] }
+    return {"status": nmbr, "text": text[str(nmbr)] }
 
 
 

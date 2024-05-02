@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Bearbeitung-Statuswürfel</title>
+    <style>
+        .headline {
+            color: #13a300;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        .big {
+            font-size: 40px;
+            color: #FF0000;
+        }
+
+        .txt {
+            font-family: Arial, sans-serif;
+            font-size: 16px;
+            line-height: 1.7;
+            color: #1b1a1a;
+            display: block;
+        }
+
+        .bild {
+            display: none;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+        }
+
+        .button {
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+
+        .buttonplus {
+            background-color: white;
+            color: black;
+            border: 2px solid #04AA6D;
+            font-size: 12px;
+        }
+
+        .buttonplus:hover {
+            background-color: #04AA6D;
+            color: rgb(59, 0, 0);
+        }
+
+        .eingabe {
+            display: block;
+            padding: 7px;
+            border: 2px solid #ccc;
+            border-radius: 5px;
+            font-size: 16px;
+            outline: none;
+            width: 250px;
+        }
+
+        .eingabe:focus {
+            border-color: #007bff;
+        }
+        .ausgabe {
+            width: 500px;
+            height: 100px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1 class="headline big">B E A R B E I T U N G S S E I T E</h1><br>
+    <p class="txt">
+        <b>welcher Status soll geändert werden?</b><br><br>
+        <input class="eingabe" type="number" min="1" max="6" id="eingStatus" placeholder="Status von 1 bis 6 eingeben"><br>
+        <input class="eingabe ausgabe" type="text" id="eingText" placeholder="hier kann der Text dann geändert werden"><br>
+        
+    </p>
+    <script>
+        /*Eingabefelder mit Funktion verknpfen*/
+        var inputstatus = document.getElementById("eingStatus");
+        inputstatus.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                TextzuStatusausgeben();
+            };
+        });
+
+        var inputtxt = document.getElementById("eingText");
+        inputtxt.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                TextzuStatusspeichern();
+            };
+        });
+
+        /*hier wird der Text zu dem jew. Status geholt*/
+        
+        async function TextzuStatusausgeben() {
+            Statusnr = document.getElementById("eingStatus").value
+            let link = linkerz("text") + "/" + Statusnr
+            let Inhalt = await getText(link)
+            document.getElementById("eingText").value = Inhalt["text"]
+        }
+
+        /*hier wird der Text in dem jeweiligen Status wieder gespeichert*/
+
+        async function TextzuStatusspeichern(){
+            let saveText = document.getElementById("eingText").value
+            let saveStatus = document.getElementById("eingStatus").value
+            let link = linkerz("aenderstatustext") + saveStatus + "/" + saveText
+            console.log(getText(link))
+        }
+
+        async function getText(link) {
+            let myObject = await fetch(link);
+            let myText = await myObject.json();
+            console.log(myText);
+            return myText
+        }
+
+        function linkerz(urlplus) {
+            let url = "http://192.168.1.190:8000"
+            let link = url + "/" + urlplus
+            /*console.log(link)*/
+            return link
+        }
+
+    </script>
+</body>
+
+</html>

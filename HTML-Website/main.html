@@ -24,44 +24,95 @@
             font-size: 16px;
             line-height: 1.7;
             color: #1b1a1a;
+            display: block;
+        }
+
+        .bild {
+            display: none;
+            margin-left: auto;
+            margin-right: auto;
+            width: 50%;
+        }
+
+        .button {
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
+            transition-duration: 0.4s;
+            cursor: pointer;
+        }
+
+        .buttonplus {
+            background-color: white;
+            color: black;
+            border: 2px solid #04AA6D;
+            font-size: 12px;
+        }
+
+        .buttonplus:hover {
+            background-color: #04AA6D;
+            color: rgb(59, 0, 0);
+        }
+
+        .eingabe {
+            display: none;
         }
     </style>
 </head>
 
 <body>
-    <h2 class="headline">W I L K O M M E N</h2>
-    <h4 class="headline">zur Website des</h4>
+    <h2 class="headline">W E B S I T E</h2>
+    <h4 class="headline">des</h4>
     <h1 class="headline big">S T A T U S W Ü R F E L S</h1>
     <br><br>
     <p class="txt">
         <b>Derzeit:</b><br>
         <i>Status: </i> <label id="Status">Hier steht eigendlich der Status</label><br>
         <i>Text: </i> <label id="Text">Hier steht eigendlich der Text</label><br>
-        <i>[Temperatur: <label id="Temp">nicht auf Status 1</label> °C]</i><br>
+        <i>[Temperatur: <label id="Temp">nicht auf Status 1</label>]</i><br>
         <i>[Temperaturtext: <label id="TempText">nicht auf Status 1</label> ]</i>
+        <br><br><br>
+        <b>Bild:</b><br>
+        <i><label id="keinBild">kein Bild, da falscher Status</label></i>
+        <img id="image" src="D:\bell-hofmann\HTML-Website\tesla-roadster.webp" class="bild">
+        <br><br>
+        <button class="button buttonplus" onclick="anmeldenakt()">Status bearbeiten</button><br><br>
+        <input class="eingabe" type="text" id="BN" placeholder="Benutzername eingeben">
+        <input class="eingabe" type="password" id="PW" placeholder="Passwort eingeben"><br>
     </p>
     <script>
         /*function update() {}*/
         async function reload() {
-            if (await statusupdate()){
+            if (await statusupdate()) {
                 Tempupdate()
             }
         }
-        /*setInterval(reload, 20000)*/
+        setInterval(reload, 10000)
 
         async function statusupdate() {
             let link = linkerz("statustext")
-            let text =  await getText(link)
+            let text = await getText(link)
             document.getElementById("Status").innerHTML = text["status"];
             document.getElementById("Text").innerHTML = text["text"];
-            if (text["status"]=1){return true}
+            if (text["status"] == 1) {
+                return true
+            };
+            if (text["status"] == 2) {
+                document.getElementById("image").style.display = "block";
+                document.getElementById("keinBild").style.display = "none";
+            };
             return false
         }
 
-        async function Tempupdate(){
+        async function Tempupdate() {
             let link = linkerz("tempstat")
-            let text =  await getText(link)
-            document.getElementById("Temp").innerHTML = text["Temperatur"];
+            let text = await getText(link)
+            document.getElementById("Temp").innerHTML = text["Temperatur"] + "°C";
             document.getElementById("TempText").innerHTML = text["TempZusatz"];
         }
 
@@ -82,8 +133,30 @@
             console.log(myText);
             return myText
         }
-        
+
         reload()
+
+        function anmeldenakt() {
+            document.getElementById("BN").style.display = "block";
+            document.getElementById("PW").style.display = "block";
+        }
+        function anmelden() {
+            let BN = document.getElementById("BN").value
+            let PW = document.getElementById("PW").value
+            if (BN == "admin" && PW == "admin") {
+                window.location.href = "D:/bell-hofmann/HTML-Website/Bearbeitung.html";
+            }
+        }
+
+        /*hier das Enter-Event*/
+        var inputpw = document.getElementById("PW");
+        inputpw.addEventListener("keypress", function (event) {
+            if (event.key === "Enter") {
+                event.preventDefault();
+                anmelden();
+            }
+        });
+
     </script>
 </body>
 
