@@ -1,0 +1,179 @@
+\documentclass[12pt]{article}
+\usepackage[left=4cm,right=3cm]{geometry}
+\usepackage[onehalfspacing]{setspace}
+\usepackage{helvet}
+\renewcommand{\familydefault}{\sfdefault}
+
+\usepackage{graphicx}
+\graphicspath{{Bilder/}}
+\usepackage[ngerman]{babel}
+
+%Wörter richtig Trennen
+
+\title{Programmierung und Bau eines Statuswürfels zur Steuerung eines E-Ink-Displays}
+\author{Leopold Hofmann}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\thispagestyle{empty}
+\newpage
+
+\renewcommand{\abstractname}{Kurzreferat}
+\begin{abstract} %Format stimmt noch überhaupt nicht!!!
+ Diese BeLL des Fachgebietes Informatik befasst sich mit dem Bau und der 
+Programmierung eines Statuswürfels. Der Statuswürfel soll ein Tool zur 
+Produktivitätsverbesserung sein. So kann der Nutzer durch einfache Interaktion mit 
+dem Würfel beispielsweise seinen Beschäftigungsstatus ändern, einen Timer stellen
+oder Smart-Home-Steuerung vornehmen. Im Wesentlichen handelt es sich um eine 
+einfache, haptische Fernbedienung. 
+
+Diese Arbeit bezieht sich zunächst auf die 
+Änderung des Beschäfti\-gungsstatus. Dafür werden drei Komponenten entwickelt, der 
+Würfel, ein Server mit REST-API und ein E-Ink-Display.
+
+Der Würfel ermittelt seine Ausrichtung mittels eines ESP 32 Microcontrollers, welcher 
+mit einem Beschleunigungssensor und Gyroskop verbunden ist. Mittels des ESP 32 
+wird zudem schon die erste Verarbeitung der Daten vorgenommen bzw. die 
+Rohdaten in einen Rotationszustand umgewandelt. Weiter wird mit dem ESP 32 eine 
+Internetverbindung hergestellt, mit welcher der Rotationzustand per WLAN an einen 
+Server gesendet werden kann. Dabei werden die Daten per http-Request an eine 
+REST-API übermittelt.
+
+Die REST-API ist darauf ausgelegt, die übermittelten Daten vorzuhalten und bei 
+Bedarf an andere Systeme weiterzuleiten. Darüber hinaus stellt diese weitere Daten 
+bereit, wie Status-Texte oder Grafiken.
+
+Ein zweiter ESP 32, welcher mit einem E-Ink-Display verbunden ist, soll nun in der 
+Lage sein, den korrekten Rotationszustand des Würfels inklusive weiterer Daten, wie 
+ein Bild oder einen Text, per http-Request abzufragen. Daraufhin zeigt das E-Ink-Display je nach empfangenen Daten einen Text oder ein Bild an.
+\end{abstract}
+\thispagestyle{empty}
+\newpage
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+
+\setcounter{page}{1}
+\section{Einleitung} %inklusive explizieter Beschreibung der Idee
+In ... Erklärung der Zettelwirtschaft lol ...
+
+Daher soll das Ziel dieses Projektes sein, diese Zettel zeitgemäß durch ein digitales und ferngesteuertes Display zu ersetzen, welches zudem auch eine einfache, haptische und intuitive Steuerung durch einen drehbaren und intelligenten Statuswürfel besitzt, welcher seinen Status bzw. seinen  Rotations-Status selbstständig auslesen kann.
+
+Zur Umsetzung dieser Ziele müssen zuerst weitere Feststellungen getroffen werden. Weder der Statuswürfel, noch das Display selber sollten eine konstante Energiezufuhr benötigen, sondern optimalerweise kabellos agieren, denn nur so kann Statuswürfel einfach und flexibel bedient werden. Beim Display auf der anderen Seite fehlt es derzeit an jeglicher Infrastruktur für eine Stromversorgung, da diese bis jetzt nie gebraucht wurde. Daher ist auch hier ein kabelloser Anschluss optimal. Folglich muss auch die Datenübertragung zwischen Statuswürfel und Display kabellos erfolgen, wozu entweder einer der beiden Komponenten einen Server darstellen muss, oder ein Server zwischen dem Statuswürfel und dem Display stehen muss. Für das Projekt sinnvoller ist die zweite Option, da durch die fehlenden Kabel der Grundkomponenten der eventuell große und dauerhafte Energiebedarf eines Servers nicht dauerhaft oder nur über einen kurzen Zeitraum gedeckt werden kann. Weiter gilt es zu Berücksichtigen, dass durch einen zentralen Server das System auch leichter erweiterbar ist durch zum Beispiel ein zweites Display.
+
+
+%Trennung erfolgt vertikal (horizontal wäre Hardware/Software)
+\newpage
+\section{Der Statuswürfel}
+\subsection{Der ESP32}%inkl. dazu ch340 software
+Der ESP-32 ist ein in China von Espressif preiswert hergestellter Mikrocontroller, welcher als jener auch oft benutzt wird, da er durch seine hohe Taktfrequenz von 80MHz bis 240MHz einen schönen Grundstein für viele Projekte legt. Auch in diesem Projekt bildet der ESP-32 eine Kernkomponente, welche nicht nur im Statuswürfel Verwendung findet, sondern auch im Display. Er besitzt 4MB externen Massenspeicher, sowie 512 kB RAM, wodurch der zum Ansteuern des ESP 32 nötige Treiber CH340 extern und nicht intern auf dem ESP 32 gespeichert wird. Des Weiteren ist er WLAN, mit bis zu 150 Mbps bzw. Megabit pro Sekunde, und auch Bluetooth fähig, wodurch er sich für eine drahtlose Datenübertragung eignet. Darüber hinaus besitzt er verschiedene Kommunikationsschnittstellenprotokolle, wie SPI, I2C, oder I2S, von welchen für dieses Projekt das I2C-Protokoll besonders relevant ist. 
+
+Alle diese Funktionen des ESP32 d1 mini können über die verschiedenen  Pin´s angesteuert werden, wie auch die Abbildung \ref{fig:ESP32-Pinout} zeigt. Für den Statuswürfel sind dabei die Pin´s des oberen Teils relevant, genauer der 3V3 Pin, welcher eine Spannungsversorgung von 3,3 V für anzuschließende Geräte darstellt, der GND-Pin, welcher den sogenannten "Ground'' und somit den Strom\-rück\-fluss bildet, sowie die IO21 und IO22 Pin´s, welche für das I2C-Protokoll den I2C1 CL oder SCL und I2C1 DA oder SDA -Anschluss bilden.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Bilder/D1_Mini_ESP32_-_pinout.pdf}
+    \caption{ESP32-Pinout}
+    \label{fig:ESP32-Pinout}
+\end{figure}
+
+
+%Mikrocontroller
+%preiswert 
+%schnell
+%adaptiv
+%chinesisch
+%einer = 0,9\$ -siehe Alibaba
+%Multifunktional -> WLan ist integriert
+%wenig Speicher, Treiber wird extern installiert
+%datasheet!!!!
+\subsection{Der Sensor - MPU 6050} %inkl. Messunsicherheit der Temperaturdaten
+
+
+
+\subsection{Auslesung der Daten} %Das Protokoll dazu!!
+Die Daten des MPU 6050 werden wie schon angedeutet mittels eines I2C-Protokolls an den ESP32 gesendet. Dieses Protokoll benötigt 2 verschiedene Kabelverbindungen, die sogenannten SDA und SCL Verbindungen. SCL steht dabei für ''Serial Clock'' = Taktfrequenz und SDA steht für ''Serial Data'' = Datenleitung.% ....................Funktionsweise weiter erklären (Bild???)
+
+
+\subsection{Speicherung bzw. Registrierung der Statusänderung}
+\subsection{Stromversorgung}%Dinge zum Energiesparen
+\subsection{Tinkercad und Modellierung}%Bild vom Modellierten Einfügen!
+Damit man den Statuswürfel nun auch flexibel und intuitiv drehen kann, musste auch ein dementsprechend gut in der Hand liegender Würfel produziert werden, in welchem sich dann die verschiedenen Komponenten befinden. Um eine derart feine und komplexe Form herzustellen, wurde sich für ein 3D-Druck-Verfahren entschieden, da durch ein derartes Verfahren fein und mit viel Präzision gearbeitet werden kann, sowie schnell eine Herstellung erneut durchgeführt werden kann, falls der Würfel nicht exakt modelliert wurde. Modellieren beschreibt dabei das gestalten, bilden oder formen des Modells für den Statuswürfel, mit welchem er dann gedruckt werden soll. 
+
+Zum Modellieren kann man verschiedenste Programme bzw. Software verwenden. Die bekanntesten zum Modellieren für den 3D-Druck sind TinkerCAD, Blender, FreeCAD, OpenSCAD, Cura oder Zbrush. Das CAD im vielen dieser Programme steht für ''Computer-Aided Design'' oder zu deutsch ''rechnerunterstütztes Konstruieren''. In diesem Fall wurde sich für TinkerCAD entschieden, da es online und konstenlos eine breite und sehr einfach zu bedienende Nutzeroberfläche bietet, durch welche man mit Leichtigkeit einfache Formen, wie Würfel, Zylinder, Quader allgemein oder Prismen mit drei Seiten und somit dreidimensionale Dreiecke, in sämtlichen Variationen zusammenfügen kann, wie es auch für den Statuswürfel benötigt wird. 
+
+Die Optimalgröße für einen handlichen Statuswürfel orientiert sich bei der Größe eines üblichen Zauberwürfels oder umgangssprachlich ''Rubik´s-Cube'', da dieser mit seinen 5,7cm Kantenlänge eine sehr handliche Form darstellt. Beim Modellieren müssen zudem einige Eigenschaften des Würfels beachtet werden. Das größte Bauelement des Statuswürfels ist der Akkumulator, welcher mit einer Länge von 6cm, an seinen elektrischen Spannungsquellen und seinem Kabelursprung sogar 6,5cm, einer Breite von 5cm und einer Dicke von 0,5cm die Maße des Statuswürfels Maßgeblich bestimmen. Da der Statuswürfel ein Würfel sein soll, sowie eine Wanddicke nach außen von in der Regel 0,5cm, jedoch minimal 0,2cm haben soll, ist eine allgemeine Kantenlänge im äußeren Bereich von 7cm angebracht. 7cm sind zwar 1,3cm länger, als ein handelsüblicher Zauberwürfel, jedoch ist auch das noch eine sehr handliche Form. Weitere in der Modellierung zu berücksichtigende Objekte sind neben dem ESP32 und dem MPU 6050, für welche jeweils eine passende Plattform bzw passende Einkerbungen modeliert wurden, auch eine Öffnung für Stromzufuhr für den Akkumulator bzw eine Öffnung um die Software des ESP32 auch im Nachhinein noch verändern zu können. Des weiteren muss noch ein Loch für einen Reset-Taster gelassen werden, da dieser bei unerwartet akzidentell auftretenden Fehlern gebraucht werden könnte.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Bilder/Huawei-MatePad-T8-vor-weissem-Hintergrund-658x370-8433d2da6f30d675.jpg}
+    \caption{Die einzelnen Bauteile des Statuswürfels}
+    \label{fig:Bild_Komponenten}
+\end{figure}
+
+Zuletzt sollte bedacht sein, dass alle Komponenten, wie in Abbildung \ref{fig:Bild_Komponenten} zu sehen, an deren korrekte Position platziert werden müssen und somit eine verschließbare Öffnung für ESP32, MPU6050 und die Batterie existieren muss und zudem gilt es allgemein zu beachten, dass ein 3D-Drucker nicht wahllos Strukturen in der Luft bzw ohne stabilen Unterbau drucken kann, denn ein handelsüblicher 3D-Drucker ist nur fähig Überhänge mit bis zu 45° Neigung sicher zu drucken. bei darauf ausgelegten Eigenschaften schafft ein 3D-Drucker bis zu 70°, gemessen von der Vertikalen.
+
+Daher ist es sinnvoll, den Würfel in zwei circa gleich großen Hälften zu drucken, weil so zum einen das Problem des Druckes mit Überhang als auch das Problem der Platzierung der Komponenten im Statuswürfel geschickt und problemlos umgangen werden kann. 
+
+In der nachfolgenden Abbildung \ref{fig:Bild _Würfel_Modell} ist ein Modell des Statuswürfels in TinkerCAD zu erkennen, wobei alle vorgenannten und notwendigen Anforderungen umgesetzt sind. Bemerkenswert ist zudem, dass alle Komponenten zudem weiter stabilisiert werden müssen, ausgenommen der Akkumulator, welcher bereits Fest in seinem zugehörigen Platz sitzt.
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Bilder/Huawei-MatePad-T8-vor-weissem-Hintergrund-658x370-8433d2da6f30d675.jpg}
+    \caption{Modell des Statuswürfels in TinkerCAD}
+    \label{fig:Bild _Würfel_Modell}
+\end{figure}
+
+
+
+\subsection{3D-Druck}%Druck klappt nicht immer lol, manchmal garnicht, manchmal passts nicht, manchmal druckfehler
+%Problem mit den Ecken lol
+
+
+
+\newpage
+\section{Die API bzw. Website} %ubuntu und linux ?!?
+\subsection{http-Request} %Warum nicht https?
+\subsection{Funktionen der API} %Warum Server notwendig!!! Text= MÜLL-> Überarbeitung!!!
+Zuallererst ist hierbei zu klären, warum überhaupt ein Server notwendig ist und warum man nicht von dem einen ESP32 zum anderen Daten senden kann. Der Grund dessen ist, dass ein Server mehr als nur ein Teilnehmer im Netzwerk ist, sondern ein Server kann immer von allen anderen Teilnehmern des Netzwerkes gesehen werden und gibt auch immer eine Antwort zurück. Ein Netzwerkteilnehmer, wie ein ESP32 auf der anderen Seite ist bloß ein Netzwerkteilnehmer und kann nicht jederzeit von allen anderen Netzwerkteilnehmern gesehen werden bzw. gibt nicht immer eine Antwort. Daher kann der eine ESP auch nicht schlicht mit dem anderen Kommunizieren, da sie sich gegenseitig nicht im Netzwerk erscheinen.
+
+
+\subsection{Speicherung der Daten} %Datenformat JSON? als subsction
+\subsection{Aufsetzen einer lokalen API}
+\subsection{Schreiben einer Website mittels HTML} %Zugriff auf die API mittels der Website
+Die Textnachrichten, welche mittels des Würfels festsetzen kann, sollen bestenfalls derart sein, dass sie ohne komplizierte Eingriffe in die Systeme der ESP32 oder verwirrende Links im Browser leicht veränderbar sind. Damit das möglich ist wurde eine Website mittels html, CSS und JavaScript aufgesetzt, welche über einen einfachen Link im Internet erreichbar ist, und welche eine Interaktive Oberfläche bietet, um verschiedenste Informationen über den Statuswürfel zu verändern.
+
+
+\newpage
+\section{Die Verbildlichung}
+\subsection{Funktionsweise eines E-Ink-Displays}
+%\subsection{besondere Eignung des E-Ink Displays}
+\subsection{Ansteuern des E-Ink-Displays mittels eines ESP32}
+
+
+\newpage
+\section{Produkt}
+\subsection{Ergebnis} %inkl. Redundanz
+\subsection{Git}
+Alle Dateien Liegen im Git!\\ Git insbesondere Gitlab hat mir sehr geholfen lol
+\subsection{\LaTeX}
+\subsection{Ausblick} %Erweiterbarkeit durch mehr Displays
+
+
+\newpage
+\section{Literaturenverzeichnis}
+\newpage
+\section{Abbildungs- und Quellenverzeichnis}
+%\renewcommand{\listoffigures}{}
+\listoffigures
+
+
+\newpage
+\section*{Danksagung}
+Ich danke Herrn Phillipp Dockhorn, meinem Externen Betreuer, sowie Herrn Koch, meinen internen Betreuer...
+
+
+\end{document}
+

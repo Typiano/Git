@@ -1,0 +1,4 @@
+https://www.az-delivery.de/en/products/esp32-d1-mini (zu Datasheet und Pinout)
+https://www.heise.de/tipps-tricks/LaTeX-Bilder-einfuegen-so-geht-s-4404598.html
+https://www.overleaf.com/learn/latex/Learn_LaTeX_in_30_minutes
+https://www.wch.cn/download/CH341SER_ZIP.html
