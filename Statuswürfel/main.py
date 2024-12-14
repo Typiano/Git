@@ -14,7 +14,7 @@ i2c = SoftI2C( scl=Pin(22), sda=Pin(21), freq=100000)     #initializing the I2C 
 mpu= mpu6050.accel(i2c)
 
 def getAnswer():
-#     mpu.get_values() #um die Werte einmal zu erneuern
+    #mpu.get_values() #um die Werte einmal zu erneuern
     wert1 = mpu.get_values()
     wert2 = mpu.get_values()
     wert3 = mpu.get_values()
@@ -31,19 +31,18 @@ def getAnswer():
     elif z <= -0.7 and -0.3 < y < 0.3 and -0.3 < x < 0.3:
         ausgabewert = "4"# links = oben
     elif z >= 0.7 and -0.3 < y < 0.3 and -0.3 < x < 0.3:
-        ausgabewert = "3"# drei = oben
+        ausgabewert = "3"# rechts = oben
     elif y <= -0.7 and -0.3 < x < 0.3 and -0.3 < z < 0.3:
         ausgabewert = "5"# hinten = oben
     elif y >= 0.7 and -0.3 < x < 0.3 and -0.3 < z < 0.3:
         ausgabewert = "2"# vorne = oben
     else:
-        ausgabewert = None# nichts konkretes = oben
+        return None# nichts konkretes = oben
     
     database = helper.load_data("RotInfo.dat")
     if database["Zustand"] == ausgabewert:
         if ausgabewert == "1": # damit die Temperatur immer übertragen wird in Zustand 1
             if Tmp != database["Temperatur"]: # außer die Temperatur hat sich nicht signifikant geändert
-                database["Zustand"] = ausgabewert
                 database["Temperatur"] = Tmp
                 helper.save_data(database, "RotInfo.dat")
                 return ausgabewert, Tmp
@@ -52,26 +51,26 @@ def getAnswer():
         database["Temperatur"] = Tmp
         helper.save_data(database, "RotInfo.dat")
         return ausgabewert, Tmp
+    return None
 
 
 Antwort = getAnswer() # Antwort = Rotatioszustand
-print(Antwort)
+#print(Antwort)
 if Antwort != None:
-    if Antwort[0] != None:
-        helper.do_connect()
-        import config
-        url1 = config.Link + "/stat/" + str(Antwort[0])
-        url2 = config.Link + "/tempstat/" + str(Antwort[1])
-        urequests.post(url1)
-        urequests.post(url2)
-        print("Daten verschickt\n")
-        helper.blink(cnt = 1)
+    helper.do_connect()
+    import config
+    url1 = config.Link + "/stat/" + str(Antwort[0])
+    url2 = config.Link + "/tempstat/" + str(Antwort[1])
+    urequests.post(url1)
+    urequests.post(url2)
+    #print("Daten verschickt\n")
+    helper.blink(cnt = 1)
+    Pin(2, Pin.OUT).off()
+    if Antwort[0] == "6":
+        Zeit = 300000 # = 300s = 5 min
+        helper.blink(cnt = 10)
         Pin(2, Pin.OUT).off()
-        if Antwort[0] == "6":
-            Zeit = 600000 # = 600s = 10 min
-            helper.blink(cnt = 10)
-            Pin(2, Pin.OUT).off()
-        else:
-            Zeit = 4000
-        deepsleep(Zeit)
-deepsleep(2000)
+    else:
+        Zeit = 5000
+    deepsleep(Zeit)
+deepsleep(5000)

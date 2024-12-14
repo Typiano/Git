@@ -1,6 +1,5 @@
 import machine
 
-
 class accel():
     def __init__(self, i2c, addr=0x68):
         self.iic = i2c
@@ -14,13 +13,6 @@ class accel():
         a = self.iic.readfrom_mem(self.addr, 0x3B, 14)
         self.iic.stop()
         return a
-
-    def get_ints(self):
-        b = self.get_raw_values()
-        c = []
-        for i in b:
-            c.append(i)
-        return c
 
     def bytes_toint(self, firstbyte, secondbyte):
         if not firstbyte & 0x80:
@@ -46,3 +38,10 @@ class accel():
         while 1:
             print(self.get_values())
             sleep(0.05)
+
+     def get_ints(self):
+        b = self.get_raw_values()
+        c = []
+        for i in b:
+            c.append(i)
+        return c

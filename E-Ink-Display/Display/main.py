@@ -151,8 +151,8 @@ if helper.do_connect():
             tempdata = tempdatenlage # falls nur die Temperatur sich ändert
             NeuesBild(datenlage, tempdatenlage)
         elif data["status"] == 6:
-            machine.deepsleep(600000)
+            machine.deepsleep(300000)
 
 print('go to deep sleep')
 
-machine.deepsleep(6000)
+machine.deepsleep(5000)

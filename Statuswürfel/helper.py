@@ -16,7 +16,7 @@ def save_data(data, name):
     f.close()
 
 def load_data(name):
-    f=open(name,"r")
+    f=open(name,"r") # opens a file for reading
     # print(f.read())
     data = ujson.load(f)
     # print("OLD DATA:", data)
@@ -46,7 +46,6 @@ def do_connect():
         wlan.active(True)
         print('connecting to network...')
         wlan.connect(ssid, pw)
-        #wlan.connect("KH Gastzugang", "kanzleihofmann2015")
         while not wlan.isconnected():
             pass
         # print("connected")
