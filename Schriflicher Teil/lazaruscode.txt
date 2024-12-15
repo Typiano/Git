@@ -31,9 +31,9 @@
 \begin{tabular}[H]{p{5cm}p{8,5cm}}
 \textbf{Thema:} &Programmierung und Bau eines Statuswürfels zur Steuerung eines E-Ink-Displays\\&\\
 \textbf{Vorgelegt von:} &Leopold Hofmann\\&\\
-\textbf{Schuljahr:}& 2023/2024 [?] \\&\\
+\textbf{Schuljahr:}& 2024/2025 \\&\\
 \textbf{externer Betreuer:}& Phillip Dockhorn \newline Hochschule Merseburg \newline Fachbereich Ingenieur- und Naturwissenschaften \newline LfbA Mikroprozessortechnik/Embedded Systems\\&\\
-\textbf{Interner Betreuer:}& Simon Koch\\
+\textbf{Interner Betreuer:}& Herr Simon Koch, Lehrer im Fachbereich Informatik\\
 \end{tabular}
 \vfill
 Leipzig, \today
@@ -90,9 +90,10 @@ Zur Umsetzung dieser Ziele müssen zuerst weitere Feststellungen getroffen werde
 \section{Grundlagen}
     \subsection{Der ESP32}
     %hier: https://de.wikipedia.org/wiki/ESP32#/media/Datei:Espressif_ESP-WROOM-32_Wi-Fi_&_Bluetooth_Module.jpg
-    Der ESP-32 ist ein in China von Espressif preiswert hergestellter Mikrocontroller, welcher als jener auch oft benutzt wird, da er durch seine hohe Taktfrequenz von 80MHz bis 240MHz einen schönen Grundstein für viele Projekte legt. Auch in diesem Projekt bildet der ESP-32 eine Kernkomponente, welche nicht nur im Statuswürfel Verwendung findet, sondern auch im Display. Er besitzt 4MB externen Massenspeicher, sowie 512 kB RAM, wodurch der zum Ansteuern des ESP 32 nötige Treiber CH340 extern und nicht intern auf dem ESP 32 gespeichert wird. Des Weiteren ist er WLAN, mit bis zu 150 Mbps bzw. Megabit pro Sekunde, und auch Bluetooth-fähig, wodurch er sich für eine drahtlose Datenübertragung eignet. Darüber hinaus besitzt er verschiedene Kommunikationsschnittstellenprotokolle, wie SPI, I2C, oder I2S, von welchen für dieses Projekt das I2C-Protokoll besonders relevant ist. 
+    Der ESP-32 ist ein in China von Espressif preiswert hergestellter Mikrocontroller, welcher als jener auch oft benutzt wird, da er durch seine Taktfrequenz von 80MHz bis 240MHz einen schönen Grundstein für viele Projekte legt. Auch in diesem Projekt bildet der ESP-32 eine Kernkomponente, welche nicht nur im Statuswürfel Verwendung findet, sondern auch im Display. Er besitzt 4MB externen Massenspeicher, sowie 512 kB RAM, wodurch der zum Ansteuern des ESP 32 nötige Treiber CH340 extern und nicht intern auf dem ESP 32 gespeichert wird. Des Weiteren ist er WLAN, mit bis zu 150 Mbps bzw. Megabit pro Sekunde, und auch Bluetooth-fähig, wodurch er sich für eine drahtlose Datenübertragung eignet. Darüber hinaus besitzt er verschiedene Kommunikationsschnittstellenprotokolle, wie SPI, I2C, oder I2S, von welchen für dieses Projekt das I2C-Protokoll besonders relevant ist. 
+    %https://www.heise.de/tipps-tricks/ESP32-Was-ist-das-Was-kann-das-4471527.html
 
-    Der ESP32 selber stellt jedoch nur einen leistungsfähigen Prozessor dar, welcher in der Regel schon auf einer Platine gelötet oder geklebt gekauft werden kann. Eines dieser Platinen ist auch 
+    Der ESP32 selber stellt jedoch nur einen leistungsfähigen Prozessor dar, welcher in der Regel schon auf einer Platine gelötet oder geklebt gekauft werden kann. Eines dieser Platinen ist auch das ESP32 d1 mini.
     
     Alle diese Funktionen des ESP32 d1 mini können über die verschiedenen  Pin´s angesteuert werden, wie auch die Abbildung \ref{fig:ESP32-Pinout} zeigt. Für den Statuswürfel sind dabei die Pin´s des oberen Teils relevant, genauer der 3V3 Pin, welcher eine Spannungsversorgung von 3,3 V für anzuschließende Geräte darstellt, der GND-Pin, welcher den sogenannten "Ground'' und somit den Strom\-rück\-fluss bildet, sowie die IO21 und IO22 Pin´s, welche für das I2C-Protokoll den I2C1 CL oder SCL und I2C1 DA oder SDA -Anschluss bilden.
     
@@ -116,7 +117,9 @@ Zur Umsetzung dieser Ziele müssen zuerst weitere Feststellungen getroffen werde
     \subsection{Batterieaufsatz} %wie heißt der? %no
     
     %Bild!
-    Der AZDelivery Batterie Shield für Lithium Batterien für D1 Mini stellt eine einfache Möglichkeit dar, ein d1 mini Board, wie es auch beim esp32 verbaut wird, mit einem Akkumulator, genauer mit einem Lithium-Ionen Akkumulator zu verbinden.\footnote{\url{https://www.az-delivery.de/products/batterie-shield-fuer-lithium-batterien-fuer-d1-mini?variant=20290868379744&utm_source=google&utm_medium=cpc&utm_campaign=16964979024&utm_content=166733588295&utm_term=&gad_source=1&gclid=Cj0KCQiAgdC6BhCgARIsAPWNWH2-XvLCCuAaJCq1veKyI0Oo70QJt41ZKou6ud33rO-9K-Ah_jA_MbkaAsU9EALw_wcB}} Dabei erfüllt der Aufsatz die folgenden 3 Eigenschafte:
+    Der AZDelivery Batterie Shield für Lithium Batterien für D1 Mini stellt eine einfache Möglichkeit dar, ein d1 mini Board, wie es auch beim esp32 verbaut wird, mit einem Akkumulator, genauer mit einem Lithium-Ionen Akkumulator zu verbinden.\footnote{az-delivery.de}
+    %https://www.az-delivery.de/products/batterie-shield-fuer-lithium-batterien-fuer-d1-mini?variant=20290868379744&utm_source=google&utm_medium=cpc&utm_campaign=16964979024&utm_content=166733588295&utm_term=&gad_source=1&gclid=Cj0KCQiAgdC6BhCgARIsAPWNWH2-XvLCCuAaJCq1veKyI0Oo70QJt41ZKou6ud33rO-9K-Ah_jA_MbkaAsU9EALw_wcB
+    Dabei erfüllt der Aufsatz die folgenden 3 Eigenschafte:
     \begin{enumerate}
     \item Ladeschutz: In dem Batterie Shield ist ein TP 5400 Chip verbaut. Dieser Chip besitzt eine Schutzschaltung wodurch ein kurzer maximaler Ladestrom von 1Â bzw. 1000 mA ermöglicht wird. Zudem ist eine Ladeautomatik integriert, durch welche der Lithium Ionen Akkumulator nicht überladen werden kann. %https://www.alldatasheet.com/html-pdf/1140419/ASIC/TP5400/110/1/TP5400.html
     \item leichte Bedienbarkeit: In das Batterie shield ist ein micro-USB Anschluss integriert, an welchem ein einfache Micro-USB Kabel angeschlossen werden kann. Das führt zu einer einfachen Bedienbarkeit, auch da das Shield mit einer im elektrotechnischem Bereich standart gemäßen Spannung von 5 Volt oder 10 Volt oder 12 Volt fähig ist den Akkumulator zu laden.
@@ -128,7 +131,7 @@ Zur Umsetzung dieser Ziele müssen zuerst weitere Feststellungen getroffen werde
     
     \begin{figure}[h]
         \centering
-        \includegraphics[width=0.75\textwidth]{Bilder/AZDelivery Battery Shield.png}
+        \includegraphics[width=0.5\textwidth]{Bilder/AZDelivery Battery Shield.png}
         \caption{Batterie Shield für Lithium Batterien für D1 Mini}
         \label{fig:Batterieaufsatz}
     \end{figure}
@@ -785,39 +788,193 @@ print(Liste)
         \caption{Der Statuswürfel mit eingebauten Komponenten}
         \label{fig:Bild_Statuswürfel_zusammengebaut}
     \end{figure}
-        In den gedruckten Würfel wurden darauf die einzelnen Teile des Statuswürfels eingeklebt wie auch in Abbildung \ref{fig:Bild_Statuswürfel_zusammengebaut} ersichtlich ist. In dieser Abbildung ist nochmals der ESP32 mit einer 1 markiert, der Sensor MPU-6050 mit einer 2, der Akkumulator mit eier 3 und zu guter Letzt ist die von außen erreichbare Reset-Taste mit einer 4 gekennzeichnet.
+        In den gedruckten Würfel wurden darauf die einzelnen Teile des Statuswürfels eingeklebt wie auch in Abbildung \ref{fig:Bild_Statuswürfel_zusammengebaut} ersichtlich ist. In dieser Abbildung ist nochmals der ESP32 mit einer 1 markiert, der Sensor MPU-6050 mit einer 2, der Akkumulator mit einer 3 und zu guter Letzt ist die von außen erreichbare Reset-Taste mit einer 4 gekennzeichnet.
+
+    \subsection{Das E-Ink-Display}
+        Das E-Ink-Display ist mittels der 8 Anschlüsse, die ''VCC'', ''GND'', ''DIN'', ''CLK'', ''CS'', ''DC'', ''RST'' und ''BUSY'' benannt sind, mit den Pins des ESP32 der Bezeichnungen ''3.3V'', ''GND'', ''IO27'', ''IO25'', ''IO32'', ''TDI'', ''IO4'' und ''IO0'' verbunden.
+        
+        Alle zu dem E-Ink-Display gehörenden Dateien sind im Anhang unter ''E-Ink-Display'' einsehbar. In der Dokumentation werden nur unvollständige und gekürzte Ausschnitte gezeigt. 
+
+    \begin{figure}[ht]
+    \centering
+    \begin{minted}[frame=lines, linenos]{python}
+helper.do_connect()
+newdata = urequests.get(Link + "/statustext", 
+        headers = {'Content-Type':'text/json'}).json()
+newtemp = urequests.get(Link + "/tempstat", 
+        headers = {'Content-Type':'text/json'}).json()
+data=helper.load_data("data.dat")
+temp = helper.load_data("Tempdata.dat")
+if  data["status"] != newdata["status"]:
+    data = newdata
+    temp = newtemp
+    NeuesBild(data, temp)
+elif newdata["status"] == 1 and 
+        temp["Temperatur"] != newtemp["Temperatur"]:
+    tempdata = tempdatenlage # falls sich nur die Temperatur ändert
+    NeuesBild(data, temp)
+if newdata["status"] == 6:
+    machine.deepsleep(300000)
+machine.deepsleep(5000)
+    \end{minted}
+    \caption{Ausschnitt aus ''main.py'' des E-Ink-Displays}
+    \label{code:E-Ink_Check ob neue Daten}
+    \end{figure}
+    
+    In dem in Abbildung \ref{code:E-Ink_Check ob neue Daten} wiedergegebenen Code wird ähnlich zu dem schon für dem Statuswürfel geschriebenen und in den Abbildungen \ref{code:Werte in main auswerten} und \ref{code:Werte in main auswerten} repräsentierten und dort auch beschriebenen Code. Auch die hier benutzten Dateien ''helper.py'' und ''config.py'' fungieren sehr ähnlich zu den schon in den Abbildungen \ref{code:Hepler.py bei Statuswürfel} und \ref{code:config_Statuswürfel} dargestellten Dateien. 
+
+    Zuerst verbindet sich der ESP32, wieder mittels der ''helper.py'', mit einem WLAN. Darauf werden mittels der ''urequest.py'', dort mittels der ''usocket''-Bibliothek, zwei http-GET-Requests mit dem in ''config.py'' zu findenden Link, mit welcher die API adressiert wird, und jeweils der Spezifikationen $''/statustext''$ oder $''/tempstat''$ ausgeführt. Diese Requests fordern Daten von der API an und die erhaltenen Daten werden in den Variablen $''newdata''$ sowie $''newtemp''$ gespeichert. Die erhaltenen Daten liegen im json-Dateiformat vor, wobei $''newdata''$ die Eigenschaften $''text''$ sowie $''status''$  und  $''newtemp''$ die Eigenschaften $''Temperatur''$ sowie $''TempZusatz''$ besitzt. Die Eigenschaft $''status''$  soll der aktuell gemessene Rotationsstatus und die Eigenschaft $''Temperatur''$ die aktuell gemessene Temperatur sein. Die anderen Eigenschaften werden für die Darstellung auf dem E-Ink-Display benötigt. 
+
+    In Zeile 6f der Abbildung \ref{code:E-Ink_Check ob neue Daten} werden die Inhalte der Dateien "data.dat" und "Tempdata.dat" in den Variablen $''data''$ und $''temp''$ gespeichert. Das sind die vorher erhaltenen Daten.
+
+    In den restlichen Zeilen wird geprüft, ob sich das angezeigt Bild des E-Ink-Displays ändern soll. Es wird geändert, wenn sich entweder die Eigenschaft $''status''$ in  oder wenn sich beim $''status''$ $''1''$ die Temperatur verändert hat. Die Änderung des Bildes wird in der Funktion $''NeuesBild(data, temp)''$ umgesetzt. Dabei werden die neuen Daten dieser Funktion, welche in der nachfolgenden Abbildungen \ref{code:E-Ink-Display_darstellung1} und \ref{code:E-Ink-Display_darstellung2} stark verkürzt dargestellt ist, übergeben.
+
+    Nach der Funktion $''NeuesBild(data, temp)''$ geht der ESP32 in den ''deepsleep'' über um Energie zu sparen. Wie schon bei dem Statuswürfel beträgt die Lange 5 Sekunden, außer der Status $''6''$ ist ausgewählt, worauf der ''deepsleep'' 5 Minuten lang durchgeführt wird.
+
+\begin{figure}[ht]
+    \centering
+    \begin{minted}[frame=lines, linenos]{python}
+def NeuesBild(newdata, newtemp):
+    import framebuf
+    e = epaper4in2.EPD(spi, cs, dc, rst, busy)
+    e.init()
+    if newdata["status"] != 2:
+        buf = bytearray(w * h // 8)
+        fb = framebuf.FrameBuffer(buf, w, h, framebuf.MONO_HLSB)
+        black = 0
+        white = 1
+        fb.fill(white)
+        e.set_display_frame(buf,buf)# Hinergrund wird weiß gefärbt
+    \end{minted}
+    \caption{Teil 1: verkürzte Funktion ''NeuesBild()'' aus ''main.py'' des E-Ink-Displays}
+    \label{code:E-Ink-Display_darstellung1}
+    \end{figure}
+
+    Die Funktion $''NeuesBild(newdata, newtemp)''$ verknüpft zunächst die Pin's mit den entsprechenden Funktionen. Daraufhin wird, hier in Abbildung \ref{code:E-Ink-Display_darstellung1} in Zeile 3f ersichtlich, durch die ''epaper4in2''-Bibliothek die Datenübertragung eingeleitet. Dabei werden auch die Pins's übergeben. Alles nun folgende geschieht nur, wenn der neu gemessene Status nicht $''2''$ ist, da sonst ein Bild angezeigt werden soll. 
+    
+    Nun wird ein Bytearray mit so vielen Bits (8 Bits ist ein Byte) erstellt, wie es Pixel auf dem E-Ink-Display gibt. Auf diesen Bytes kann auch die ''FrameBuffer''-Funktion der ''framebuf''-Biblioithek zugreifen. Diese füllt, siehe Zeile 9 der Abbildung \ref{code:E-Ink-Display_darstellung1}, das gesamte Bytearray mit Einsen auf, worauf die ''epaper4in2''-Funktion alle Pixel des E-Ink-Displays mit den Bytes auffüllt. Dabei kann jeder Pixel zwei Bits speichern und wird doppelt befüllt, da es ein Wert für die Schwarzfärung und ein Wert für die Rotfärbung gibt. Der erste $''buf''$ ist dabei die potenzielle Schwarzfärbung und der zweite $''buf''$ die potenzielle Rotfärbung, wobei der Wert für den Pixel 0 sein müsste, um zu einer Färbung zu führen.
+
+    \begin{figure}[ht]
+    \centering
+    \begin{minted}[frame=lines, linenos]{python}
+def NeuesBild(newdata, newtemp):
+    if newdata["status"] == 1:
+    elif newdata["status"] == 6:
+    else:
+        tnorm1, tnorm2 = newdata["text"].split("<br>", 1)
+        tnormtemp = str(newtemp["Temperatur"]) + " Grad Celsius"
+        rtc = machine.RTC().datetime()
+        tnormuhr = str(rtc[4]) + ":" + str(rtc[5]) + " Uhr"
+        helper.text_wrap(fb,str(tnorm1),round(w/2 -
+            helper.hufuregel(tnorm1)),50, black, w=300, h=100)
+        helper.text_wrap(fb,str(tnormuhr),round(w -
+            helper.hufuregel(tnormuhr)*2-10),10, black, w=300, h=100)
+        helper.text_wrap(fb,str(tnormtemp),10 ,10, black, w=300, h=100)
+        e.set_display_frame(buf,None)
+        fb.fill(white)
+        fb.rect(round(w/2-helper.hufuregel(tnorm2)-4), 170, 
+            helper.hufuregel(tnorm2)*2+8, 18, black)
+        helper.text_wrap(fb,str(tnorm2),round(w/2 -
+            helper.hufuregel(tnorm2)),175, black, w=300, h=100)
+        e.set_display_frame(None, buf)
+    e.show_display_frame()
+    e.sleep()
+    \end{minted}
+    \caption{Teil 2: verkürzte Funktion ''NeuesBild()'' aus ''main.py'' des E-Ink-Displays}
+    \label{code:E-Ink-Display_darstellung2}
+    \end{figure}
+
+    In der Abbildung \ref{code:E-Ink-Display_darstellung2} sieht man die Fortsetzung der Funktion $''NeuesBild(newdata, newtemp)''$. Nun wird geprüft, ob der Status eine $''1''$ oder eine $''6''$ ist. Ist dies nicht der Fall, muss der Status eine $''3''$, $''4''$ oder $''5''$ sein. In diesen Fällen passiert das selbe, jedoch mit unterschiedlichen Texten. Dabei wird zuerst der in $''newdata''$ gespeicherte Text an der Sollbruchstelle ''<br>'' geteilt und die entstehenden Texte in $''tnorm1''$ und $''tnorm2''$ gespeichert. Danach werden noch in Zeile 8 und 9f die Texte für die Temperatur und die Uhrzeit zusammengestellt. 
+
+    Nun werden die einzelnen Texte in den $''buf''$ hineingeschrieben, jedoch vorerst die schwarzen Texte, gefolgt von den Roten. So werden $''tnorm1''$, der Text für die Temperatur und der Text für die Uhrzeit so in das Framebuf geschrieben, dass an den Stellen wo der Pixel schwarz sein soll eine 0 steht. Die 0 wird in der Abbildung \ref{code:E-Ink-Display_darstellung2} durch die Variable $''black''$ ersetzt. Der Text für die Temperatur soll dabei links oben, an der Stelle (10|10) (der Pixel (0|0) befindet sich links oben auf dem Display), der Text für die Uhrzeit soll bei (400-10|10) enden, wodurch die Funktion erschwert wird, und der Text $''tnorm1''$ soll zentriert, das erschwert die Funktion deutlich, bei dem Pixel 50 (gemessen von oben) beginnen. Diese Bytes werden nun in Zeile 15 auf das E-Ink-Display auf jeden Pixel in den Bit für die Schwarzfärbung übertragen, wärend für die Rotfärbun nichts ($''None''$) übertragen wird.
+
+    Darauf wird gesamte Bytearray in Zeile 16 mit Einsen gefüllt und der zweite Text wird zentriert auf Höhe 175 in das Bytearray geschrieben. Zudem wird die einen Pixel breite Umrandung eines Rechteckes in $''buf''$ derart geschrieben, dass die Umrandung an allen Seiten vier Pixel von dem Text entfernt ist. Darauf werden auch diese Bytes in die Pixel des Display übertragen, sodass der Bit für die Rotfärbung geändert wird.
+
+    Zuletzt wird in Zeile 22 das E-Ink-Display aktiviert, wodurch es die neuen Pixel umfärbt. In Zeile 23 geht das E-Ink-Display schließlich wieder in den Ruhemodus über.
 
     
-    %bis hier stark überarbeiten!!!
         
-        \subsubsection{Akkulaufzeit}
-        ?????????????? Wenn heute noch zeit ist....
-    \subsection{Das E-Ink-Display}
-    \subsection{Website}
+
     \subsection{Die API}
+
+\begin{figure}[ht]
+    \centering
+    \begin{minted}[frame=lines, linenos]{python}
+from fastapi import FastAPI, Path
+from typing_extensions import Annotated
+import sys, help, uvicorn
+
+app = FastAPI()
+
+Startdaten = help.load_data("Daten.dat")
+Temperatur = Startdaten["Temperatur"]
+status = Startdaten["status"]
+TempZusatznachricht = Startdaten["TempZusatznachricht"]
+text = Startdaten["text"]
+
+@app.get("/stat/{val}")
+@app.post("/stat/{val}")
+async def set_status(val: Annotated[int, Path(ge=1, le=6)]):
+    global status, Startdaten
+    status = val
+    Startdaten["status"] = status
+    help.save_data(Startdaten, "Daten.dat")
+    return {"status": status, "message" : "status changed to " + 
+        str(status)}
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    \end{minted}
+    \caption{Ausschnitt der Datei ''main.py'' der API}
+    \label{code:API-verkürzt}
+    \end{figure}
+
+    In der Abbildung \ref{code:API-verkürzt} wird ein Ausschnitt der Python Datei ''main.py'' gezeigt, welcher die Funktionalität der API verdeutlicht. Als erstes wir dabei eine Instanz der ''FastAPI()''-Anwendung unter der Variable $''app''$ gespeichert.  In den darauf folgenden Zeilen wird diese Instanz genauer in der Funktionsweise definiert. Schließlich in Zeile 23f wird durch die ''uvicorn''-Bibliothek diese Instanz auf dem Gerät gehostet. Unter ''host'' wird zudem spezifiziert, dass alle Geräte aus dem lokalem Netzwerk zugreifen können, sowie, dass der Port "8000" \space ist. Somit kann mit der lokalem IP des Gerätes, auf welchem die API ausgeführt wird, und dem Port mit der API in einem üblichen Browser kommunizieren. 
+
+    In Zeile 7ff des in Abbildung \ref{code:API-verkürzt} wiedergegebenen Programmes, werden die in der API gespeicherten Daten geladen. Das geschieht wieder mit einer ''help.py'', welche sehr ähnlich zu der ''helper.py'' beim Statuswürfel, abgebildet in Abbildung \ref{code:Hepler.py bei Statuswürfel}, operiert. Die gespeicherten Daten enthalten den derzeit ermittelten Status, sowie die derzeit gemessene Temperatur. Dazu wird zu jedem möglichen Status ein Text gespeichert. Bei Status $''1''$ und $''2''$ ist dieser nicht relevant und bei Status $''3''$, $''4''$ und $''5''$ beinhaltet der Text eine Sollbruchstelle bei ''<br>'', damit der Text in den oberen und unteren Teil auf dem E-Ink-Display geteilt werden kann. Zuletzt speichert die API noch die $''TempZusatznachricht''$, welche für die jeweilige Temperatur eine extra Nachricht bietet, welche in Zustand $''1''$ auf dem E-Ink-Display je nach gemessener Temperatur angezeigt werden soll. So existiert eine für weniger als 0\textdegree, eine für weniger als 18\textdegree, eine für weniger als 33\textdegree, eine für weniger als 50\textdegree und eine für ab 50\textdegree.
+
+    In der Abbildung \ref{code:API-verkürzt} kann man beispielhaft eine Funktion der API in Zeile 13ff einsehen. Dabei soll der API der aktuelle Status des Statuswürfels mit einer ''GET'' oder ''PUSH''-Request übertragen werden. Das  mit der der url ''http://192.168.178.74:8000/stat/4'' beispielsweise umgesetzt. ''192.168.178.74:8000'' ist dabei die lokale IP der API, gefolgt von dem Port. ''/stat/'' führt zu der in Zeile 13ff dargestellten Funktion. Der Wert ''4'' ist die in der Abbildung \ref{code:API-verkürzt} mit $''val''$ deklarierte Variable. Diese muss wie in Zeile 15 beschrieben zwischen $''ge=1''$ 1 und $''le=6''$ 6 sein, da der Status nur zwischen 1 und 6 definiert ist. Darauf wird der neue Status in den Variablen $''status''$ und $''Startdaten''$ geändert und auch die gesicherte Datei ''Daten.dat'', durch welche anfangs die Daten initialisiert wurden, wird mit dem neuen Rotationszustand überschrieben. Zudem gibt die Funktion (in diesem Beispiel) die Antwort: ''\{''status'': 4, ''message'': ''status changed to 4''\}''.
+
+    Auf diese Art und Weise sind sämtliche Funktionen der API geschrieben. Diese liegen im Anhang in der ''main.py'' im Unterordner ''API'' anbei.
+    
+    \subsection{Website}
+
+    In der Abbildung \ref{fig:Websites} sind 3 Website dargestellt, von welchen auch die zugehörigen html-Datein im Anhang im Unterordner ''HTML-Website'' zu finden sind. Genauer ist im oberen Teil der Abbildung \ref{fig:Websites} die Datei ''Bearbeitung.html'', links unten die Datei ''main.html'' und rechts unten die Datei ''index.html'' visualisiert. 
+    
+    %nicht viel erklären, Bild zeigen, sagen das geht, aber hier nicht relevant html und ajvascript....
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.75\textwidth]{Bilder/Website.png}
+        \caption{Die 3 Websites für die API}
+        \label{fig:Websites}
+    \end{figure}
+
+    In der ''main.py'', sichtbar links unten in der Abbildung \ref{fig:Websites}, soll der derzeitige Status des Statuswürfels dargestellt sein und somit den Status mit dem dazu gehörigen Text zeigen, sowie im Status 1 die Temperatur mit dem Temperaturtext. Zudem kann man von ''main.py'' unter Eingabe des richtigen Benutzernamen und Passwort zu der ''Bearbeitung.html'' weitergeleitet werden. Das ist so, damit der nicht jeder Zugriff auf die ''Bearbeitung.html'' hat, sondern nur die Administratoren.
+
+    In der ''Bearbeitung.html'', erkennbar oben in der Abbildung \ref{fig:Websites}, kann man jeweils einen Status eingeben und einen neuen Text für den Status eingeben. Darauf werden die entsprechenden Dateien in der API geändert. Zudem kann der bisherige Text eines Status ausgegeben werden, indem bei dem Eingabefeld für den Status ''Enter'' gedrückt wird. Darauf wird in dem darauf folgendem Eingabefeld der bisherige Status ausgegeben, welcher so einfach bearbeitet werden kann.
+
+    Zuletzt ist die ''index.html'', wahrnehmbar rechts unten in der Abbildung \ref{fig:Websites}, für das Setzen eines neuen Status zuständig. Dabei kann man einen neuen Status in die Eingabezeile eingeben, worauf man auf den ''Button'' klicken kann und der Status geändert wird. 
     
     
 \section{Zusammenfassung und Ausblick}
 \subsection{Zusammenfassung}
-    - Es wurde alles erreicht, nein! Bild!, wenig verbesserungen?...
-    - Eingehen auf Startproblem, kann es das Startproblem lösen
-    - was steht noch im weg?
-    ist es einfach zu bedienen?
-    - Zeit bis zur Umstellung bei Display
+    In der Konzeption wurde viel Konzipiert und fast alles davon wurde auch erreicht. Dazu gehört die Programmierung und der Bau eines Akkumulator-betriebenen Statuswürfels, welcher sowohl seinen eigenen Rotationszustand  erkennt, als auch die Außentemperatur misst. Dazu sendet dieser, jedoch nur wenn sich entweder der Rotationszustand oder die Temperatur beim Status ''1'' verändern, die neuen Messungen an eine API. 
+    
+    Dazu wurde eine API programmiert, welche in der Lage ist die Messungen des Statuswürfels entgegenzunehmen und diese zu speichern. Zudem speichert diese einen Text zu jedem Status, sowie fünf verschiedene Texte für den Wert der Temperatur, je nachdem wie kalt oder warm es ist. Mittels Anfragen können alle diese Daten der API zudem geändert werden.
+
+    Ein Tool um diese Daten, insbesondere der Text zu den Einzelnen Rotationszuständen, einfach ändern zu können ist die Website, welche zum einen den derzeitigen Status, inklusive dazugehörigem Text, darstellen kann, als auch den Status selber ändern kann. Eine Funktion, welche in der Website jedoch noch nicht integriert ist, ist die Änderung des Textes für die Temperatur. Das könnte ähnlich zu der Änderung der Texte zu dem Status erfolgen.
+
+    Zuletzt gibt es noch ein E-Ink-Display, welches mit der Hilfe eine ESP32 die Temperatur und Rotationsdaten, inklusive der dazugehörigen Texte, bei der API anfragt und dadurch zugesandt bekommt. Je nach empfangenen Daten bildet das E-Ink-Display darauf einen Text ab.
+
+    Somit kann ein Mitarbeiter in seinem Büroraum den Statuswürfel drehen, worauf innerhalb von 10 Sekunden (da der ''deepsleep'' je maximal 5 Sekunden andauert) das E-Ink-Display den neuen Arbeitsstatus des Mitarbeiters darstellt.
+
+    Insgesamt wurde fast alles erreicht. Ein kleiner Teil in der Website fehlt und die Option ein Bild einzufügen fehlt völlig. Somit ist es derzeit weder möglich ein Bild über die Website hochzuladen, noch dieses über die API an dem E-Ink-Display projizieren zu lassen.
 
 
 \subsection{Ausblick}
-    BILD! ALLES mit BILDERN!!!
-    Einfügbar: 
-     - Induktionsladen
-     - leichtere Veränderbarkeit der Zustände??
-     - Passwort leichter ändern
-     - größere Batterie
-     - Hüller für E-Ink drucken
-     massenproduktion?
-     big upselling?
-     Produkt allgemein?
-     - kosten?
+    Eine Funktion, welche perspektivisch integriert werden sollte ist wie schon erwähnt das Bild und das Ändern des Temperatur-Textes. Des weiteren ist das Laden des Statuswürfels durch das Kabel manchmal in der Funktion unpraktisch, da die Rotation durch das Kabel eingeschränkt ist. Besser wäre hier Induktionsladen, durch welches sich der Statuswürfel nur an der richtigen Position über dem Ladegerät befinden muss, um zu einer Ladung zu führen.
+
+    Des Weiteren sollte das Passwort für das WLan für den ESP32 leichter änderbar sein, anstatt immer eine Datei im ESP32 verändern zu müssen. Das ist bei wechselndem WLan sehr aufwendig. Zudem ändert sich die lokale IP-Adresse der API häufig, weshalt auch hier immer die Programme der einzelnen Komponenten verändert werden müssen. Auf dieses Problem sollte auch eingegangen werden.
      
 
 
@@ -826,26 +983,54 @@ print(Liste)
 
 
 \newpage
-\section{Literaturenverzeichnis}
+\thispagestyle{empty}
+\section{Quellenverzeichnis}
+
+\begin{enumerate}
+\item Author: AZ-Delivery Vertriebs GmbH, Datum: 15.12.2024, Quelle: \url{https://www.az-delivery.de/products/batterie-shield-fuer-lithium-batterien-fuer-d1-mini}
+
+\end{enumerate}
+
+
 \newpage
-\section{Abbildungs- und Quellenverzeichnis}
 %\renewcommand{\listoffigures}{}
+\thispagestyle{empty}
 \listoffigures
 
 
-%\newpage
-%\section*{Danksagung}
-%Zuerst möchte ich mich bei meinem externen Betreuer Phillip Dockhorn bedanken, welcher mir sowohl sämtliches Arbeitsmaterial bzw. sämtliche Hardware zur Verfügung gestellt hat als auch mir jederzeit sämtliche inhaltliche Fragen zur BeLL beantwortet hat. Weiter konnte ich durch seine durchweg voranschreitende Art zu Arbeiten effizienter an der BeLL arbeiten. 
+\newpage
+\thispagestyle{empty}
+\section*{Anlagen}
+In den Anlagen befinden sich nochmals in alle Dateien, welche in der BeLL erwähnt werden. Dazu gehören sämtliche Programme zu dem Statuswürfel, der API, dem E-Ink-Display und der Website, welche in gleichnamigen Ordnern aufgefunden werden können. 
 
-%Mein weiterer Dank gilt der HTWK, welche mir auch durch Herrn Dockhorn einen Arbeitsraum zum effizienten Erarbeiten der BeLL zur verfügung stellte. 
+Allgemein liegen die anhängenden Dokumente in der Form einer CD-Rom anbei. Jedoch können alle Dateien auch in einem für die BeLL angelegtem öffentlichen GitHub-Repository unter dem Link \url{https://github.com/Typiano/Git} aufgefunden werden. Das Repository kann auch durch den in Abbildung \ref{fig:QR} dargestellten QR-Code aufgerufen werden.
+\newline
+\newline
+\newline
 
-%Zuletzt möchte ich mich noch bei Herrn Simon [?-nachschauen!] Koch bedanken, welcher mir als mein interner Betreuer stets für Fragen zur Verfügung stand.
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Bilder/BeLL_Statuswürfel-1024.jpeg}
+    \caption{QR-Code zu dem GitHub-Repository}
+    \label{fig:QR}
+\end{figure}
 
 \newpage
+\thispagestyle{empty}
+\section*{Danksagung}
+Zuerst möchte ich mich bei meinem externen Betreuer Phillip Dockhorn bedanken, welcher mir sowohl sämtliches Arbeitsmaterial bzw. sämtliche Hardware zur Verfügung gestellt hat als auch mir jederzeit sämtliche inhaltliche Fragen zur BeLL beantwortet hat. 
+
+Nur durch eine Aktive Unterstützung und wertvollen Hinweise für die BeLL konnte diese beendet werden.
+
+Mein weiterer Dank gilt der HTWK, welche mir auch durch Herrn Dockhorn einen Arbeitsraum zum effizienten Erarbeiten der BeLL zur verfügung stellte. 
+
+Zuletzt möchte ich mich noch bei Herrn Simon Koch bedanken, welcher mir als mein interner Betreuer stets für Fragen zur Verfügung stand. Des Weiterhin hat er mir auch eine ausführlich Rückmeldung zu
+
+\newpage
+\thispagestyle{empty}
 \section*{Selbstständigkeitserklärung}
-Hiermit bestätige ich, dass ich alle hier in der BeLL veröffentlichten Informationen selbstständig erarbeitet habe. 
-\\ \\ \\ \\ \\Leopold Hofmann
+Hiermit erkläre ich, dass ich die vorliegende Arbeit selbstständig und ohne unerlaubte fremde Hilfe angefertigt, keine anderen als die angegebenen Quellen und Hilfsmittel verwendet und die den verwendeten Quellen und Hilfsmitteln wörtlich oder inhaltlich entnommenen Stellen als solche kenntlich gemacht habe.
 
-
-ANHANG!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+Zusätzlich stimme ich zu, dass diese Arbeit schulintern verwendet werden darf
+\\ \\ \\ \\ \\Leopold Hofmann, Leipzig, \today
 \end{document}
