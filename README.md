@@ -1,4 +1,5 @@
-# BeLL-Hofmann
+# BeLL-Leopold Hofmann- Programmierung und Bau eines Statusw ¨urfels
+zur Steuerung eines E-Ink-Displays
 
 ## Links
 ### Docs
