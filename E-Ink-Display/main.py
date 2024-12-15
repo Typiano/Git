@@ -9,7 +9,7 @@ from config import Link
 print("wait for start-interrupt")
 time.sleep(1)
 
-def NeuesBild(datenlage, tempdatenlage):
+def NeuesBild(newdata, newtemp):
     # SPIV on ESP32
     miso = machine.Pin(12) # NOT USED
     mosi = machine.Pin(27) # DIN
@@ -27,9 +27,8 @@ def NeuesBild(datenlage, tempdatenlage):
     h = 300
     x = 0
     y = 0
-    # use a frame buffer
-    # 400 * 300 / 8 = 15000 - thats a lot of pixels
-    if datenlage["status"] != 2:
+    # 400 * 300 / 8 = 15000 
+    if newdata["status"] != 2:
         rtc = machine.RTC().datetime()
         import framebuf
         buf = bytearray(w * h // 8)
@@ -38,26 +37,26 @@ def NeuesBild(datenlage, tempdatenlage):
         white = 1
         fb.fill(white)
         e.set_display_frame(buf,buf)# Hinergrund wird weiß gefärbt
-        if datenlage["status"] == 1:# die Wetter Seite
-            t1 = str(tempdatenlage["Temperatur"]) + " Grad Celsius"
+        if newdata["status"] == 1:# die Wetter Seite
+            t1 = str(newtemp["Temperatur"]) + " Grad Celsius"
             t2 = "Es ist exakt um " + str(rtc[4]) + ":" + str(rtc[5]) + " Uhr."
             fb.text(t1, round(w/2 - len(t1)*4), 20, black)
             fb.text(t2, round(w/2 - len(t2)*4), 40, black)
             e.set_display_frame(buf,None)# hier drüber wird schwarz geschrieben
             fb.fill(white)
-            tt1 = tempdatenlage["TempZusatz"]
+            tt1 = newtemp["TempZusatz"]
             helper.text_wrap(fb,str(tt1),round(w/2-helper.hufuregel(tt1)),175,black, w=300, h=100)
             e.set_display_frame(None, buf)# hier drüber wird rot geschrieben
-        elif datenlage["status"] == 6:
+        elif newdata["status"] == 6:
             fb.fill(black)
-            taus1 = datenlage["text"]
+            taus1 = newdata["text"]
             helper.text_wrap(fb,str(taus1),round(w/2-helper.hufuregel(taus1)),150, white, w=300, h=100)
             e.set_display_frame(buf, None)# hier drüber wird weiß auf schwarz geschrieben
             fb.fill(white)
             e.set_display_frame(None,buf)# hier drüber wird rot geschrieben
         else: 
-            tnorm1, tnorm2 = datenlage["text"].split("SPLIT", 1)
-            tnormtemp = str(tempdatenlage["Temperatur"]) + " Grad Celsius"
+            tnorm1, tnorm2 = newdata["text"].split("<br>", 1)
+            tnormtemp = str(newtemp["Temperatur"]) + " Grad Celsius"
             tnormuhr = str(rtc[4]) + ":" + str(rtc[5]) + " Uhr"
             helper.text_wrap(fb,str(tnorm1),round(w/2-helper.hufuregel(tnorm1)),50, black, w=300, h=100)
             helper.text_wrap(fb,str(tnormuhr),round(w-helper.hufuregel(tnormuhr)*2-10),10, black, w=300, h=100)
@@ -121,8 +120,8 @@ def NeuesBild(datenlage, tempdatenlage):
     e.set_display_frame(buf,None)
     e.show_display_frame() # für Schrit?
     """
-    helper.save_data(tempdatenlage, "Tempdata.dat")
-    helper.save_data(datenlage, "data.dat")
+    helper.save_data(newtemp, "Tempdata.dat")
+    helper.save_data(newdata, "data.dat")
     #time.sleep(15)
     #e.sleep()
     helper.blink(cnt=2)
@@ -131,26 +130,24 @@ def NeuesBild(datenlage, tempdatenlage):
 if helper.do_connect():
     #textdata = http_get("http://192.168.0.131/txt/5", 8000)
     try:
-        resp = urequests.get(Link + "/statustext", headers = {'Content-Type':'text/json'})
-        datenlage = resp.json()
-        print(datenlage)
-        tempdatenlage = urequests.get(Link + "/tempstat", headers = {'Content-Type':'text/json'}).json()
+        newdata = urequests.get(Link + "/statustext", headers = {'Content-Type':'text/json'}).json()
+        newtemp = urequests.get(Link + "/tempstat", headers = {'Content-Type':'text/json'}).json()
     except:
         print("cant connect to server")
     else:
         #print("NEW DATA:", resp.json())
         data=helper.load_data("data.dat")
-        tempdata = helper.load_data("Tempdata.dat")
-        if  data["status"] != datenlage["status"]:
-            data = datenlage
-            tempdata = tempdatenlage
+        temp = helper.load_data("Tempdata.dat")
+        if  data["status"] != newdata["status"]:
+            data = newdata
+            temp = newtemp
             print("status changed to: " + str(data["status"]))
-            NeuesBild(datenlage, tempdatenlage)
-        elif datenlage["status"] == 1 and tempdata["Temperatur"] != tempdatenlage["Temperatur"]:
-            print(tempdata["Temperatur"])
-            tempdata = tempdatenlage # falls nur die Temperatur sich ändert
-            NeuesBild(datenlage, tempdatenlage)
-        elif data["status"] == 6:
+            NeuesBild(newdata, newtemp)
+        elif newdata["status"] == 1 and temp["Temperatur"] != newtemp["Temperatur"]:
+            print(temp["Temperatur"])
+            temp = newtemp # falls nur die Temperatur sich ändert
+            NeuesBild(newdata, newtemp)
+        if newdata["status"] == 6:
             machine.deepsleep(300000)
 
 print('go to deep sleep')
