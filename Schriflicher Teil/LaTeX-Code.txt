@@ -1,0 +1,1040 @@
+\documentclass[12pt]{article}
+\usepackage[left=4cm,right=3cm]{geometry}
+%, bottom=3cm,top=3cm
+\usepackage[onehalfspacing]{setspace}
+\usepackage{helvet}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{mathtools}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage[locale=DE]{siunitx}
+
+\usepackage{graphicx}
+\graphicspath{{Bilder/}}
+\usepackage[ngerman]{babel}
+
+\usepackage{minted}
+\usepackage{caption} % für python code
+
+%Wörter richtig Trennen
+
+
+
+
+
+
+\title{\large \textbf{Wilhelm-Ostwald-Schule, Gymnasium der Stadt Leipzig} \\\textbf{Dokumentation zur Besonderen Lernleistung}}
+\author{\large Im Fachbereich: Informatik}
+\date{}
+\begin{document}
+\maketitle
+
+\begin{tabular}[H]{p{5cm}p{8,5cm}}
+\textbf{Thema:} &Programmierung und Bau eines Statuswürfels zur Steuerung eines E-Ink-Displays\\&\\
+\textbf{Vorgelegt von:} &Leopold Hofmann\\&\\
+\textbf{Schuljahr:}& 2024/2025 \\&\\
+\textbf{externer Betreuer:}& Phillip Dockhorn \newline Hochschule Merseburg \newline Fachbereich Ingenieur- und Naturwissenschaften \newline LfbA Mikroprozessortechnik/Embedded Systems\\&\\
+\textbf{Interner Betreuer:}& Herr Simon Koch\\
+\end{tabular}
+\vfill
+Leipzig, \today
+
+\thispagestyle{empty}
+\newpage
+
+\renewcommand{\abstractname}{Kurzreferat}
+\begin{abstract} %Format stimmt noch überhaupt nicht!!!
+ Diese BeLL des Fachgebiets Informatik befasst sich mit dem Bau und der 
+Programmierung eines Statuswürfels. Der Statuswürfel soll ein Tool zur 
+Produktivitätsverbesserung sein. So kann der Nutzer durch einfache Interaktion mit 
+dem Würfel beispielsweise seinen Beschäftigungsstatus ändern, einen Timer stellen
+oder Smart-Home-Steuerung vornehmen. Im Wesentlichen handelt es sich um eine 
+einfache, haptische Fernbedienung. 
+
+Diese Arbeit bezieht sich zunächst auf die 
+Änderung des Beschäftigungsstatus. Dafür werden drei Komponenten entwickelt, der 
+Würfel, ein Server mit REST-API und ein E-Ink-Display.
+
+Der Würfel ermittelt seine Ausrichtung mittels eines ESP32-Microcontrollers, welcher 
+mit einem Beschleunigungssensor und Gyroskop verbunden ist. Mittels des ESP32 
+wird zudem schon die erste Verarbeitung der Daten vorgenommen bzw. die 
+Rohdaten in einen Rotationszustand umgewandelt. Weiter wird mit dem ESP32 eine 
+Internetverbindung hergestellt, mit welcher der Rotationszustand per WLAN an einen 
+Server gesendet werden kann. Dabei werden die Daten per HTTP-Request an eine 
+REST-API übermittelt.
+
+Die REST-API ist darauf ausgelegt, die übermittelten Daten vorzuhalten und bei 
+Bedarf an andere Systeme weiterzuleiten. Darüber hinaus stellt diese weitere Daten 
+bereit, wie Status-Texte oder Grafiken.
+
+Ein zweiter ESP32, welcher mit einem E-Ink-Display verbunden ist, soll nun in der 
+Lage sein, den korrekten Rotationszustand des Würfels inklusive weiterer Daten, wie 
+ein Bild oder einen Text, per HTTP-Request abzufragen. Daraufhin zeigt das E-Ink-Display je nach empfangenen Daten einen Text oder ein Bild an.
+\end{abstract}
+\thispagestyle{empty}
+\newpage
+\thispagestyle{empty}
+\tableofcontents
+\thispagestyle{empty}
+\newpage
+
+\setcounter{page}{1}
+\section{Einleitung} %inklusive explizieter Beschreibung der Idee
+%Motivation? Zielstellung? mehr subsections?
+In sowohl vielen Kanzleien als auch vielen Büros wird veraltet immer noch viel zu viel Zettelwirtschaft betrieben. Damit wird hier auch besonders das Anbringen von Klebezetteln oder Haftnotizen zum Darstellen der derzeit verübten Tätigkeit an der Tür eines Büroraumes beschrieben. Diese Zettelchen erzeugen viele Probleme. Zum einen erzeugen sie durch Erwerb und Entsorgung eine nicht notwendige Kostenquelle und zum anderen wird das Entfernen dieser Papierstücke zu oft auch aus Faulheit vergessen, wodurch es zu Fehlkommunikationen in Bürogebäuden kommen kann.
+
+Daher soll das Ziel dieses Projektes sein, diese Zettel zeitgemäß durch ein digitales und ferngesteuertes Display zu ersetzen, welches zudem auch eine einfache, haptische und intuitive Steuerung durch einen drehbaren und intelligenten Statuswürfel besitzt, welcher seinen Status bzw. seinen  Rotations-Status selbstständig auslesen kann.
+
+Zur Umsetzung dieser Ziele müssen zuerst weitere Feststellungen getroffen werden. Um eine optimale Flexibilität des Statuswürfels zu ermöglichen, sollte dieser keine konstante Energiezufuhr benötigen, sondern optimalerweise kabellos agieren, denn nur so kann der Statuswürfel einfach und dynamisch bedient werden. Folglich muss  die Datenübertragung zwischen dem Statuswürfel und 
+dem Display kabellos erfolgen, wozu entweder einer der beiden Komponenten einen Server darstellen muss, oder ein Server zwischen dem Statuswürfel und dem Display stehen muss. Für das Projekt sinnvoller ist die zweite Option, da durch die fehlenden Kabel der Grundkomponenten der eventuell große und dauerhafte Energiebedarf eines Servers nicht dauerhaft oder nur über einen kurzen Zeitraum gedeckt werden kann. Weiter ist durch einen zentralen Server das System auch leichter erweiterbar mit zum Beispiel ein zweites Display.
+
+\newpage 
+\section{Grundlagen}
+    \subsection{Der ESP32}
+    %hier: https://de.wikipedia.org/wiki/ESP32#/media/Datei:Espressif_ESP-WROOM-32_Wi-Fi_&_Bluetooth_Module.jpg
+    Der ESP32 ist ein in China von Espressif preiswert, je nach Anbieter und Menge 1€ bis 2€, %https://www.alibaba.com/product-detail/ESP8266-ESP-12F-CH340G-V2-USB_62328228209.html
+    hergestellter Mikrocontroller, welcher als jener auch oft benutzt wird, da er durch seine Taktfrequenz von 80MHz bis 240MHz einen  Grundstein für viele Projekte legt. Auch in diesem Projekt bildet der ESP32 eine Kernkomponente, welche nicht nur im Statuswürfel Verwendung findet, sondern auch im Display. Er besitzt 4MB externen Massenspeicher, sowie 512 kB RAM. Auch daher wird der zum Ansteuern des ESP32 nötige Treiber "CH341SER"  %https://www.wch.cn/download/ch341ser_exe.html
+    extern und nicht intern auf dem ESP32 gespeichert wird. Des weiteren ist er WLAN, mit bis zu 150 Mbps bzw. Megabit pro Sekunde, und auch Bluetooth-fähig, wodurch er sich für eine drahtlose Datenübertragung eignet. Darüber hinaus besitzt er verschiedene Kommunikationsschnittstellenprotokolle, wie SPI, I²C, oder I2S, von welchen für dieses Projekt das I²C-Protokoll besonders relevant ist. 
+    %https://www.az-delivery.de/collections/esp32
+    %https://www.heise.de/tipps-tricks/ESP32-Was-ist-das-Was-kann-das-4471527.html
+
+    Der ESP32 ist in der Regel auf Platinen angebracht, durch welche die Pin's des ESP32 angesteuert werden können. Eines dieser Platinen ist auch das ESP32-D1-Mini.
+    
+    Viele Funktionen des ESP32-D1-Mini, wie das I²C-Protokoll, können über die verschiedenen  Pin´s angesteuert werden, wie auch die Abbildung \ref{fig:ESP32-Pinout} zeigt. Für den Statuswürfel sind dabei die Pin´s des oberen Teils relevant, genauer der 3V3 Pin, welcher eine Spannungsversorgung von 3,3 V für anzuschließende Geräte darstellt, der GND-Pin, welcher den sogenannten "Ground" und somit den Strom\-rück\-fluss bildet, sowie die IO21 und IO22 Pin´s, welche für das I²C-Protokoll den I²C1 CL oder SCL und I²C1 DA oder SDA -Anschluss bilden.
+    
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.75\textwidth]{Bilder/D1_Mini_ESP32_-_pinout.pdf}
+        \caption{ESP32-Pinout}
+        \label{fig:ESP32-Pinout}
+    \end{figure}
+    
+    
+    %Mikrocontroller
+    %preiswert 
+    %schnell
+    %adaptiv
+    %chinesisch
+    %einer = 0,9\$ -siehe Alibaba
+    %Multifunktional -> WLAN ist integriert
+    %wenig Speicher, Treiber wird extern installiert
+    %datasheet!!!!
+    \subsection{Batterie-Shield} %wie heißt der? %no
+    
+    %Bild!
+    Das "AZDelivery Batterie-Shield für Lithium Batterien für D1 Mini" stellt eine einfache Möglichkeit dar, ein D1-Mini-Board, wie es auch beim ESP32 verbaut wird, mit einem Akkumulator, genauer mit einem Lithium-Ionen Akkumulator zu verbinden.
+    %https://www.az-delivery.de/products/batterie-shield-fuer-lithium-batterien-fuer-d1-mini?variant=20290868379744&utm_source=google&utm_medium=cpc&utm_campaign=16964979024&utm_content=166733588295&utm_term=&gad_source=1&gclid=Cj0KCQiAgdC6BhCgARIsAPWNWH2-XvLCCuAaJCq1veKyI0Oo70QJt41ZKou6ud33rO-9K-Ah_jA_MbkaAsU9EALw_wcB
+    Dabei erfüllt das "Batterie-Shield" drei Eigenschaften:
+    \begin{enumerate}
+    \item Ladeschutz: In dem "Batterie-Shield" \space ist ein TP 5400 Chip verbaut. Dieser Chip besitzt eine Schutzschaltung wodurch ein kurzer maximaler Ladestrom von 1A bzw. 1000 mA ermöglicht wird. Zudem ist eine Ladeautomatik integriert, durch welche der Lithium Ionen Akkumulator nicht überladen werden kann. %https://www.alldatasheet.com/html-pdf/1140419/ASIC/TP5400/110/1/TP5400.html
+    \item Leichte Bedienbarkeit: In dem "Batterie-Shield" ist ein Mikro-USB Anschluss integriert, an welchem ein einfache Mikro-USB-Kabel zum Aufladen des Akkumulators angeschlossen werden kann. Das führt zu einer einfachen Bedienbarkeit, u.a. zudem, da das "Batterie-Shield" mit einer im elektrotechnischem Bereich standardisierten Ladespannung von 5 Volt  oder 12 Volt den Akkumulator aufladen kann.
+    \item Integrierte Montage: Das Board kann einfach über oder unter dem ESP32-D1-Mini angebracht werden, da die beigelegten Stiftreihen auf beiden Boards verlötet werden können.
+    \end{enumerate}
+       
+   
+    %https://www.az-delivery.de/products/batterie-shield-fuer-lithium-batterien-fuer-d1-mini?variant=20290868379744&utm_source=google&utm_medium=cpc&utm_campaign=16964979024&utm_content=166733588295&utm_term=&gad_source=1&gclid=Cj0KCQiAgdC6BhCgARIsAPWNWH2-XvLCCuAaJCq1veKyI0Oo70QJt41ZKou6ud33rO-9K-Ah_jA_MbkaAsU9EALw_wcB
+    
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.5\textwidth]{Bilder/AZDelivery Battery Shield.png}
+        \caption{Batterie-Shield für Lithium Batterien für D1 Mini}
+        \label{fig:Batterieaufsatz}
+    \end{figure}
+
+        
+    \subsection{Der MPU-6050}
+    Der MPU-6050 ist ein elektronischer Mikrosensor (mikro-elektromechanisches System = MEMS), welcher zugleich als Thermometer, Gyroskop sowie Accelerometer verwendet werden kann. Somit kann er die Temperatur, seine Winkelgeschwindigkeit und seine Ausrichtung durch die auf ihn wirkende Beschleunigung messen.
+
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.4\textwidth]{Bilder/MPU6050.jpg} %schmaler als normal! (sonst 0.75)
+        \caption{Der MPU-6050}
+        \label{fig:MPU 6050}
+    \end{figure}
+
+    Das elektronische Thermometer basiert auf den unterschiedlichen Widerstand verschiedenster Stoffen bei unterschiedlichen Temperaturen. Wenn ein Halbleiter zum Beispiel verwendet wird, dann sinkt der Widerstand mit steigender Temperatur. Somit kann die Temperatur indirekt durch den sinkenden Widerstand bestimmt werden. Jedoch sind viele elektronischen Thermometer nicht sonderlich genau, da durch die selbst verursachte Abwärme die zu messende Temperatur erhöht wird. Somit kann ein Messfehler entstehen. Dieser ist davon abhängig, wie lange das Thermometer bereits misst, da zu Beginn die Abwärme und somit der Messfehler gering ist. Die Durchlüftung des Sensors mit Umgebungsluft sowie die erzeugte Abwärme haben zudem starken Einfluss auf den Messfehler.
+
+    Ein Gyroskop verwendet einen sich möglichst Reibungsfrei drehenden Kreisel, um somit durch die Trägheit des Kreisels nach dessen Drehung den Drehwiderstand bzw. die zur Drehung notwendige Kraft zu messen. Nach der Formel $F=m*a$ kann durch die gegebene Masse des Kreisels sowie die gemessene Kraft, welche durch den Kreisel überwunden werden muss, die Beschleunigung $a$ durch $a=F/m$ indirekt gemessen werden.
+
+    Ein Accelerometer, auch Beschleunigungsmesser genannt, ist ein Messgerät zur Ermittlung der Beschleunigung häufig in Abhängig zu der Ausrichtung. In diesem Fall ist es ein elektronisches Messgerät und agiert auf der Basis von Mikro-Silicium-"Federn", welche nur wenige Mikrometer breit sind. Je nach Abstand dieser "Federn" zu einem benachbarten "Kondensator ändert sich dessen Kapazität. Je kleiner der Abstand, desto höher die Kapazität. Mit vielen dieser "Federn" kann die Beschleunigung linear bestimmt werden. 
+    
+    Durch die dreiachsige Aufstellung von drei linearen Accelerometern kann die Beschleunigung auch dreidimensional räumlich bestimmt werden. Da durch die Erde konstant eine Beschleunigung von exakt $g = 9,81 m/s$ auf das Accelerometer ausgeübt wird, kann jederzeit bestimmt werden, welche Seite des Accelerometers oben bzw. unten ist, da dort $g$ oder $-g$ gemessen werden sollte.
+
+    %https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf
+    %https://www.instrumentationtoday.com/mems-accelerometer/2011/08/
+    
+    
+    \subsection{Das I²C-Protokoll}
+    I²C steht für  "Inter-Integrated Circuit" und beschreibt einen seriellen Datenbus, welcher 1982 von Philips Semiconductors, heute NXP Semiconductors, entwickelt wurde. Bis heute bleibt er ein weit verbreiteter Industriestandard für serielle Datenkommunikation. Hauptsächlich wird er zur geräteinternen Kommunikation zwischen verschiedenen Schaltungsteilen verwendet, wie etwa in Fernsehgeräten oder zwischen einem Mikrocontroller und Peripheriegeräten. 
+
+    Der I²C-Bus ist als Master-Slave-Bus konzipiert, wobei ein Controller, auch "Master" genannt, die Kommunikation initiiert und die Targets, auch "Slaves" genannt, darauf reagieren. Der Bus benötigt dabei nur zwei Signalleitungen: eine Taktleitung (SCL bzw. "serial clock") und eine Datenleitung (SDA bzw. "serial data"), die beide mit Pull-up-Widerständen an die Versorgungsspannung angeschlossen sind. Die Kommunikation erfolgt mit positiver Logik, wobei ein High-Pegel einer logischen „1“ und ein Low-Pegel einer „0“ entspricht. %https://heinen-elektronik.de/glossar/I2C/
+    Es ist daher  aufgrund seiner Einfachheit, Flexibilität und seines dadurch geringen Stromverbrauchs ein beliebtes Protokoll in vielen Branchen.  
+    
+    %https://sense.digitalmatter.com/de/blog/I2C-sensor-monitoring
+
+    Ursprünglich sah das I$^{2}$C Protokoll eine Maximalgeschwindigkeit von 100 $100kbit/s$ vor. Jedoch wurden später 1998 Fast Mode und auch 2007 Fast Mode Plus vorgestellt, welche Geschwindigkeiten von $400kbit/s$ und sogar $1.000kbit/s$ erreicht werden konnten.
+    
+    %https://de.i2c-bus.org/fast-mode/
+
+    Zuletzt wurde im Jahr 2012 der Ultra Fast Mode vorgestellt, welcher eine Geschwindigkeit von bis zu $5.000kbit/s$ unterstützt, jedoch nur mit Einschränkungen, wie zum Beispiel, dass die Daten nur einseitig gesendet werden oder dass es nur ein "master-" Gerät geben kann. 
+    %https://www.i2c-bus.org/ultra-fast-mode-ufm/
+    
+    \subsection{3D-Druck}
+    Der 3D-Druck ist eine neuartige Form der Herstellung von feinen, verschiedenartigen und einzigartigen Objekten. Um jedoch ein gewünschtes Objekt im 3D-Druckverfahren drucken zu können, muss es vorerst für die Maschiene bzw. den Drucker verständlich modelliert werden.
+        \subsubsection{Modellierung}
+        Modellieren beschreibt im physikalischem und auch informatischen Sprachgebrauch das Bilden eines Modells bzw. einer Abbildung der Realität, zur Vereinfachung eines komplexen Vorgangs.  \\
+        In diesem Fall jedoch beschreibt Modellierung schlicht das erstellen eines Modells, welches die Realität möglichst genau abbildet. Genauer wird hierbei beim 3D-Druck das Erstellen eines für den 3D-Drucker verständlichen Modells bezeichnet. Somit gibt es auch einige für den 3D-Druck wichtige zu beachtende Faktoren.\\
+        Der 3D-Drucker kann nicht "ins Nichts" drucken bzw. unter jeder Fläche benötigt der 3D-Drucker einen geeigneten Unterbau. Somit können verschiedenste hohle Strukturen bzw. Strukturen mit Überhang nur auf 2 verschiedene Art und Weisen gedruckt werden. Zum Einen kann man versuchen auf waagerechte Überhänge zu verzichten, indem man Schrägen mit einem Neigungswinkel, gemessen von der Vertikalen, von 45° bis 60° stattdessen benutzt. Je nach Schichtdicke, Material und Schichtbreite unterscheidet sich der maximale Neigungswinkel eines 3D-Druckers.
+        Des Weiteren können sehr gute 3D-Drucker je nach Druckeinstellungen sowie Filamentart "Lücken" bzw. vertikale Brücken mit einem Abstand von 8-13cm drucken.
+        Zusätzlich können Überhänge durch ein temporäres, meist sehr schmales und dünnes leicht zu entfernendes Fundament bzw. Stütze gedruckt werden.\\
+        Die einfachste Möglichkeit jedoch einen Hohlraum zu drucken, ist das zerteilen des Objekts in zwei Teile, wodurch die Decke nun auf dem Druckbett bzw. Druckboden aufliegt, wodurch die Decke bzw. der Hohlraum mit Leichtigkeit gedruckt werden kann. Bei dieser Methode muss nur beachtet werden, dass man einen Art Zusammensteckmechanismus modelliert, welcher entweder an sich schon hält oder welchen man leicht verkleben kann.
+        %https://help.prusa3d.com/de/article/modellierung-mit-blick-auf-3d-druck_164135
+
+        
+        \subsubsection{TinkerCAD}
+        TinkerCAD ist ein weit verbreitetes Programm zur Erstellung von 3D-Modellen. Es ist online und konstenfrei verfügbar, wodurch es an Beliebtheit erlangt hat. Doch das wichtigste ist, dass die von TinkerCAD bereitgestellte Nutzeroberfläche sich intuitiv und nutzerfreundlich benutzen lässt. So lassen sich in das erstellte Modell schnell Objekte wie einen Würfel einfügen, sowie diesen beliebig auf der Arbeitsfläche verschieben. Dabei können verschiedenste Objekte wie Prismen, Kugeln oder auch Komplexe Formen wie Sterne, Ikosaeder, beliebige Texte oder auch sehr verschiedene vorgefertigte Formen wie zB. ein "Cartoon eye-left" oder einen weihnachtlichen Tannenbaum verwendet werden..
+
+        Weiter kann man sämtliche Formen "mergen", zusammenführen oder gruppieren, womit sie als eine einzige Form betrachtet werden. Das ist sehr nützlich, da sonst die modellierte Struktur sehr kompliziert und inkohärent erscheinen kann. \\
+        Zuletzt und das ist eine der wichtigsten Funktionen, kann man Formen invertieren und somit miteinander an den Intersektion auslöschen. 
+        
+        Mit diesen wenigen Funktionen schon ist es mit TinkerCAD möglich, alle denkbaren und notwendigen Formen zu modellieren.
+        
+        \subsubsection{3D Drucker} %Präzision!
+        Um nun eine modellierte Form drucken zu können benötigt man selbstverständlicher Weise einen 3D-Drucker, doch das Drucken selbst ist auch eine schwierige Aufgabe. Unter Modellierung wurde schon ein Problem, das Drucken über der Leere, besprochen, es gibt jedoch im 3D-Drucker noch weitere.\\
+        %Aufbau erklären!
+        Durch die große Druckerspitze, muss der 3D-Drucker von unten nach oben drucken und somit benötigt der 3D-Drucker "Fahrplan", wo er Drucken soll und wo er sich nach oben bewegen soll. Dazu muss der Druckuntergrund erwärmt und mit der Druckerspitze synchronisiert wein. \\
+        Des Weiteren werden solide Wände, oft um Material zu sparen, nicht vollständig solide gedruckt, sondern eine Füllstruktur gedruckt, welche aus bis zu 90\% Luft bestehen und trotz dessen stabil sind, da in der Regel regelmäßige Formen in dieser Füllstruktur verbaut werden, wie gleichmäßige Dreiecke oder Quadrate. 
+        
+        
+    \subsection{API}
+    Das Wort "API" ist eine Abkürzung für "Application Programming Interface" oder übersetzt "Programmierschnittstelle". Somit ist eine API eine Schnittstelle zwischen zwei mit der API verbundenen informatischen Systemen. Diese Schnittstelle, durch welche Daten übertragen werden, kann von Programmierern genutzt werden, um eine Datenübertragung zu kontrollieren, indem Daten abgespeichert und manipuliert werden. Zudem kann man mit einer API mehr als nur zwei informatische Systeme verbinden und die Datenübermittlung bei drei oder mehr Systemen steuern. Zusätzlich haben API's oft schon voreinprogrammierte vereinfachte Funktionen, welche die Programmierung oder grafische Darstellung stark vereinfachen können.
+
+    % das lesen:
+    %https://www.talend.com/de/resources/was-ist-eine-api/
+    %https://de.wikipedia.org/wiki/Programmierschnittstelle
+    
+    Eine solche programmierbare REST-API bietet "FastAPI". "FastAPI" nutzt dabei "uvicorn" um mittels Python in einer nicht synchronen "async"-Funktion Daten einzulesen, diese zu verarbeiten, genauer diese zu speichern und zu manipulieren, und danach weiterzusenden.
+    %https://www.uvicorn.org
+    %https://fastapi.tiangolo.com/
+    REST steht dabei für "Representational State Transfer" und beschreibt eine heutige gängige Kommunikationsart mittels zum Beispiel http-Protokolle, bei welcher die Kommunikation in sich einmalig und abgeschlossen ist, sowie keine Information vom Datentransfer-Service selbst einbehalten werden.
+    %https://www.appleute.de/app-entwickler-bibliothek/was-ist-rest-api/
+    
+    
+
+
+    
+    \subsection{HTML}
+    HTML steht für "Hypertext Markup Language" oder auf deutsch "Hypertext-Auszeichnungssprache". HTML ist ein Dateityp, welcher dabei helfen soll einen Text zu strukturieren und auch teilweise zu formatieren. Dazu zählt die Strukturierung in "head" und "body" oder in Tabellen sowie die Formatierung von zum Beispiel der Schriftgröße. Zusätzlich kann man auch Metadaten, wie der Titel in HTML leicht in "head" eingefügt werden.
+
+    Diese HTML-Dokumente sind eine Grundlage des heutigen "World-Wide-Web" und werden von gängigen Browsern wie Safari, Opera, Firefox, Microsoft Edge oder Google Chrome unterstützt sowie dargestellt. Jedoch ist HTML ein Dateityp beziehungsweise eine Art Programmiersprache, welche nicht für eine Formatierung ausgelegt wurde, sondern für die semantische Strukturierung. Für die Formatierung wird daher häufig CSS verwendet, welches dann in Kombination mit dem HTML-Dokument von Browser dargestellt wird.
+
+    %https://de.wikipedia.org/wiki/Hypertext_Markup_Language
+    %https://praxistipps.chip.de/was-ist-html-verstaendlich-erklaert_40979
+
+    Des weiteren wird eine HTML-Datei oder dessen Formatierung heute häufig nicht mehr selbst geschrieben, sondern durch verschiedenste Programme erleichtern erstellt, wodurch nur die Website gestaltet werden muss.
+
+    \subsection{IP-Adressen} %Glaube das lass ich einfach raus....
+    Vorab sollte klargestellt werden, dass in Bezug auf LAN private und öffentliche IP-Adressen gibt. Öffentliche IP Adressen werden Netzwerken im "World-Wide-Web" zugewiesen und in diesen Netzwerken wird den dort verbundenen Geräten eine lokale IP-Adresse zugewiesen. 
+    
+    Hier soll es dabei nur um private IP-Adressen gehen. Diese identifizieren ein Gerät eines lokalem Netzwerkes und bestehen 4 8-bit Zahlen von 0 bis 255, getrennt mit je einem ".". Ein Gerät eines lokalen Netzwerkes kann ein anderes Gerät des selben lokalen Netzwerkes mit seiner lokalen IP-Adresse adressieren und so ansteuern sowie Informationen übersenden.
+
+    Des Weiteren gibt es Ports, welche mit einem ":" an die IP-Adresse angehängt werden können. Diese sind in der Regel  16-bit Zahl (0 bis  65.535). Durch den Port können unterschiedliche Funktionen eines Gerätes des Netzwerkes parallel angesteuert und einfacher unterschieden werden.
+    %https://www.kaspersky.de/resource-center/definitions/what-is-an-ip-address
+    
+    \subsection{http-Request} %Get und Post
+    Das http-Protokoll, oder "Hypertext Transfer Protocol" , bezeichnet ein Protokoll zur Datenübertragung zwischen zwei informatischen Systemen. Anwendung findet das http-Protokoll großteilig im World-Wide-Web, wo es die Informationsübergabe, genauer das herunterladen von Websites auf den Browser regelt. Jedoch geschieht dies heutzutage meist mit einer Fortentwicklung des http-Protokolls, da dieses als veraltet und unsicher angesehen wird. Dessen Nachfolger, die https Datenübertragung ist sehr ähnlich, jedoch verwendet sie eine digitale Signatur mittels SSL um die Datenübertragung sicherer zu machen.
+    %https://www.xovi.de/was-bedeutet-http/
+    %https://www.digicert.com/de/what-is-ssl-tls-and-https#:~:text=Abkürzung%20für%20Secure%20Sockets%20Layer,Senden%20über%20das%20Internet%20ermöglicht.
+    
+    Das http-Protokoll hat zwei Hauptbefehle, mit welchen Daten gesendet oder auch gefordert werden können. Den POST-Befehl und den GET-Befehl. Diese beiden Befehle stellen die Grundlage für die http-Reguests dar. 
+    
+    Eine GET-Request besteht in der Regel aus dem Befehl "GET", gefolgt von der url der Seite, welche heruntergeladen werden soll. Es ist dabei nötig alle Informaionen in der url zu versenden. Der Nachteil dessen ist jedoch, dass viele Browser die url speichern und persönliche Daten damit gespeichert werden könnten. Daher kann man mit der POST-Request Daten abseits der url in einem "body" mitsenden. Diese werden dann dementsprechend nicht in der url zwischengespeichert.
+    
+    %https://de.wikipedia.org/wiki/Hypertext_Transfer_Protocol#HTTP_GET
+
+    
+    \subsection{E-Ink-Display} %eventuell inklusive Ansteuerung???
+    Ein E-Ink-Display oder "Electronic-Ink-Display" ist eine Art eines elektronischen Bildschirms, welcher nicht auf selbstleuchtenden Pixeln basiert, sondern auf Farbe, welche in den einzelnen Pixeln platziert wird und von dem Umgebungslicht angeleuchtet wird. 
+
+    Ein klassischer E-Ink-Display-Pixel besteht dabei aus einer Flüssigkeit, früher oft Öl, in welcher positiv und negativ geladene Farbpartikel vorliegen. Die Partikel können sich dabei frei in der Flüssigkeit bewegen. Auf beiden Seiten des Pixels, das heißt hinter und vor dem Pixel aus der Sicht auf das Display, liegen durchsichtige Elektroden an, welche verschieden geladen sind. 
+
+    Je nach Ladung der Elektroden bewegen sich dann die unterschiedlich geladenen Farbpartikel in den Vordergrund des Pixels und in den Hintergrund des Pixels. Sie sind dadurch separiert und die geladenen Farbpartikel, welche sich nach vorne bewegt haben, bilden eine Farbschicht, die von einem auf das Display schauenden Beobachter gesehen werden kann. Nun ist es möglich die an den Pixel anliegenden Elektroden umzupolen. Dies führt zu einer Verschiebung der geladenen Farbpartikel, sodass auf die vorher vorne vorliegenden Partikel durch das elektrische Feld eine Kraft nach hinten wirkt und die Partikel nach hinten verschoben werden, während die vorher hinten vorliegenden Partikel nach vorne bewegt werden. 
+
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.75\textwidth]{Bilder/E-Ink-Display-Normal.png}
+        \caption{Das "400x300, 4.2inch E-Ink display module, three-color, SPI interface" von Waveshare}
+        \label{fig:E-Ink-Display WerbeFoto}
+    \end{figure}
+    
+    Somit ist mittels dieser einfachen Technik ein Display mit zwei verschiedenen Farben, häufig schwarz und weiß, zu bauen. Der Vorteil dessen gegenüber eines normalen Displays ist, dass sobald die Farbe einmal eingestellt ist keine weitere Energie mehr benötigt wird, um den das Bild anzuzeigen. Dadurch muss die Stromversorgung nicht konsistent sein und das E-Ink-Display hat ohne Bildänderung keinen Energiebedarf. Des weiteren wirkt ein E-Ink-Display ähnlicher zu Papier, als ein LED Display, was je nach Anwendungsbereich vorteilhaft sein kann. Jedoch hat ein E-Ink-Display auch Nachteile. Entsprechen leuchtet es nicht von selber und ist daher im Vergleich zu üblichen Displays dunkel und vor allem in einer dunklen Umgebung kann ein E-Ink-Display kaum bis gar nicht lesbar sein, da nur Licht aus der Umgebung das E-Ink-Display erleuchtet. Zudem ist ein E-Ink-Display durch die physischen Pixel in der Bildwiederholrate eingeschränkt. Filme können kaum angeschaut werden und bei höher Bildwiederholrate sinkt auch die Energieeffizienz, der ursprüngliche Vorteil des E-Ink-Displays. Daher lässt sich ein E-Ink-Display optimal in Tätigkeiten anwenden, welche dauerhaft oder für lange Zeit einen Text ausgeben sollen, wie Preisschilder in Läden oder auch E-books.
+
+    In neueren E-Ink-Displays lassen sich mehr als nur 2 Farben darstellen. Mit der Kaleido-Bauweise zum Beispiel wird ein RGB-Farbfilter über die Pixel gelegt, wodurch Farben darstellt werden können. Auch sind auf ähnliche Art und Weise E-Ink-Displays mit den Farben weiß,  rot und schwarz möglich, welche besonders bei Ladenschildern Anwendung finden, da mit der Farbe rot ein Angebot im Laden dargestellt werden kann.
+
+    %https://www.elektroniknet.de/optoelektronik/displays/e-ink-die-evolution-der-farbtechnologie.215070.html
+    %https://www.notebookcheck.com/Kaleido-3-E-Ink-will-42-Zoll-farbiges-E-Paper-fuer-Bus-und-Bahn-ab-Sommer-produzieren.837636.0.html
+
+    Ein Beispiel eines solchen E-Ink-Displays, welches schwarz, weiß und rot darstellen kann, ist das "400x300, 4.2inch E-Ink display module, three-color, SPI interface" von Waveshare, welches auch in der Abbildung \ref{fig:E-Ink-Display WerbeFoto} dargestellt ist. %https://www.waveshare.com/w/upload/6/6a/4.2inch-e-paper-specification.pdf
+    Um dieses anzusteuern, sind die in Tabelle \ref{tab:Anschlüsse an E-Ink-Display} aufgelisteten Kabelanschlüsse vorgesehen.
+
+
+    \begin{table}[h]
+    \centering
+    \begin{tabular}{>{\centering\arraybackslash}p{2cm} >{\centering\arraybackslash}p{8cm}}
+        \textbf{Anschluss} & \textbf{Beschreibung} \\
+        \hline
+        VCC & 3.3V~5V \\
+        GND & Ground \\
+        DIN & SPI MOSI pin \\
+        CLK & SPI SCK pin \\
+        CS & SPI chip selection, low active \\
+        DC & Data/Command selection (high for data, low for command) \\
+        RST & External reset, low active \\
+        BUSY & Busy status output, low active \\
+    \end{tabular}
+    \caption{Kabelanschlüsse für das E-Ink-Display}
+    \label{tab:Anschlüsse an E-Ink-Display}
+    \end{table}
+
+    
+    %https://www.waveshare.com/product/4.2inch-e-paper-module-b.htm
+    
+    
+    
+
+    %https://www.e-shelf-labels.de/news/nachricht/warum-e-ink.html#:~:text=E-Ink%20oder%20E-Paper,Mikrokapseln%20und%20werden%20so%20sichtbar.
+    \subsection{Software}
+        \subsubsection{MicroPython}
+        "MicroPython" ist eine wie der Name schon sagt sehr an Python angelehnte Programmiersprache, welche im Gegensatz zu Python primär für die Programmierung von Mikro-Controllern verwendet wird. In der Realität ist sogar Python 3 implementiert mit vielen Standard-Bibliotheken wie unter anderem "time". 
+        %https://micropython.org
+        Des Weiteren enthält MicroPython eine interaktive Eingabeaufforderung (REPL), über welche einfach Befehle ausgeführt und sein Code somit getestet werden kann. MicroPython selber besteht aus einem Python-Compiler für Bytecode und einem Laufzeitinterpreter dieses Bytecodes.
+        %https://docs.sunfounder.com/projects/kepler-kit/de/latest/pyproject/python_start/introduction_micropython.html
+        Zudem gibt es Entwicklungsumgebungen wie "Thonny", welche den Einstieg mit "MicroPython" weiter erleichtern können. Der Vorteil bei "Thonny" ist, dass es kostenlos, sowie Open-Source ist und Anfängern durch Intuition das Programmieren erleichtert.
+        %https://thonny.de.softonic.com
+        %\subsubsection{\LaTeX}
+        \subsubsection{Git und GitHub}
+        Git ist eine kostenlose und frei zugängliche Software zu Versionsverwaltung von Daten. Auch wenn sie ursprünglich für Das Linus - Betriebssystem und deren Versionsverwaltung erstellt wurde, wird Git heutzutage sehr häufig für die Speicherung und Verwaltung von Versionen einzelner (Informatik-) Projekte genutzt. So findet sich auf Git eine sehr diverse Reihe verschiedenster, teilweise öffentlich zugänglicher Projekte, genannt Git-"Repository`s".
+        
+        Für die Verwaltung stellt Git einige Befehle für die einzelnen Nutzer bereit. Zunächst muss klargestellt werden, dass Git mit zwei verschiedenen Instanzen arbeitet. Dem "Remote"\space bzw. den in Git abgespeicherten Daten und den "Working Files" bzw. den bei dem Nutzer abgespeicherten Daten. Zwischen diesen beiden Instanzen sind nun verschiedene Befehle möglich. Die wichtigsten Befehle sind der "pull" \space sowie der "push". Durch einen "pull" \space werden die im Git abgespeicherten Daten zu dem Nutzer kopiert. Der "push" \space andererseits kopiert die Daten des Nutzers auf die im Git gespeicherten Daten. Es wird bei einem "push"\space nur die Änderung "gepusht\grqq \space und auf diese, welche mittels eines \grqq add" \space festgestellt wird, mit einem "commit\grqq \space eine Änderungsüberschrift sowie ein Änderungsprotokoll angehängt wird. So werden im Git nicht nur die einzelnen Dateien gespeichert, sondern auch die historischen Änderungen und somit die früheren Versionen der Dateien. Dadurch wiederum können unvorhergesehene negative Änderungen der Dateien annulliert werden kann.
+
+        Es gibt zudem viele verschiedene Software, mit welcher der Zugang zu dem Git-System erleichtert wird. Die größten und bekanntesten Beispiele dazu sind Gitlab und Github, von welchen Github oft als Programm für Privatpersonen und Gitlab häufig als Programm für Firmen oder Geschäftsleute angesehen wird. In dieser BeLL wurde auch ein Git-Repository mittels Gitlab erstellt. in diesem ist sämtlicher Code sowie alle Änderungen des Codes abgespeichert. Der Link dazu lautet \url{https://github.com/Typiano/Git}.
+
+        
+\newpage
+\section{Konzeption}
+    \subsection{Überblick über das Projekt}
+    Das Projekt beinhaltet die Programmierung und den Bau eines Statuswürfels. Der Statuswürfel soll ein Würfel sein, welcher seinen Rotationszustand, relevant ist seine obere Seite, an eine API sendet, wo die Daten weiterverarbeitet werden. Er soll dabei zudem seine Temperatur, bzw. die Umgebungstemperatur um den Statuswürfel auszulesen.
+
+    Die empfangenen Daten werden von der API gespeichert und manipuliert, bzw. weitere Daten angehängt, und darauf an das E-Ink-Display weitergegeben.
+
+    Auf dem E-Ink-Display sollen die Daten daraufhin angezeigt werden. Dabei insbesondere auch ein von der API mitgegebene Text.
+
+    Diese Textweitergabe sowie die API ist nötig, da die Daten flexibel über eine weitere Instanz geändert werden soll. Diese Instanz soll eine Website sein. Von dieser aus soll man einfach die Daten der API derart ändern, dass sie auf dem E-Ink-Display anders dargestellt werden. Dadurch können auch neuartige ursprünglich unvorhergesehene Zustände der arbeitenden Person einfach integriert werden.
+
+    \subsection{Netzwerktopologie}
+
+    Zuerst einmal sollte man klären, was eigendlich eine Netzwerktopologie ist.
+    Der Begriff Netzwerktopologie bezeichnet die physische und logische Struktur von Knotenpunkten und Verbindungen in einem Netzwerk. Als den Knoten bezeichnet man in der Regel Netzwerkgeräte wie Switches, Router und Software mit Switch- und Router-Funktionen. Netzwerktopologien werden meist in Form von Diagrammen visualisiert.
+    
+    %https://www.computerweekly.com/de/definition/Netzwerktopologie
+
+    Durch Netzwerktopologien kann die Struktur eines Netzwerkes in der Regel als Graph einfach visualisiert werden, wodurch das logische Verständnis der praktischen Funktionsweise des Netzwerkes vereinfacht wird. 
+
+    In der folgenden Abbildung \ref{fig:Bild_Netzwerktopologie} ist die Topologie der in diesem Projekt geplanten Anwendung dargestellt. Dabei sind die Knoten bzw. Instanzen als gelbe Rechtecke mit Beschriftung dargestellt und die Kanten/ Pfeile stellen die Verbindungen beziehungsweise Beziehungen zwischen den einzelnen Instanzen dar.
+
+    %https://de.wikipedia.org/wiki/Graphentheorie
+
+    So hat der Statuswürfel einen Einfluss auf die API , da er dieser Daten sendet und die API diese speichert. Dem E-Ink-Display sollen ebenfalls Daten übersandt werden, jedoch ist das E-Ink-Display kein Server und nicht dauerhaft aktiv. Daher muss es die Daten erst von der API anfordern um sie daraufhin empfangen zu können. Daher ist in Abbildung \ref{fig:Bild_Netzwerktopologie} ein Doppelpfeil zwischen API und E-Ink-Display zu erkennen. Die Website ist insofern eine Kombination aus Statuswürfel, da sie sowohl Daten anfordert, als auch neue senden soll.
+    
+    Die einzelnen Komponenten bzw. Instanzen unter sich, genauer der Statuswürfel, die Website und das E-Ink-Display besitzen keine Kanten oder Verbindungen untereinander, da sie nicht miteinander kommunizieren können und sämtlich Kommunikation über die API ausgetragen wird. 
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.75\textwidth]{Bilder/Netzuwerktopologie2.png}
+    \caption{grobe Darstellung der Netzwerktopologie}
+    \label{fig:Bild_Netzwerktopologie}
+\end{figure}
+    
+    Der Benutzer, hier \grqq USER" \space hat ebenfalls eine besondere Rolle in dem Netzwerk. Er kann sowohl den Statuswürfel, als auch die Website beeinflussen und sie kontrollieren, bzw. ihnen Daten geben, indem er den Statuswürfels dreht oder die Website benutzt. Von dem Nutzer gehen jedoch nicht nur Pfeile aus, sondern münden auch in ihm. Bei ihm münden sowohl Pfeile der Website, als auch vom E-Ink-Display, da beide Instanzen Daten an den Nutzer übermitteln können. Da der Nutzer kein maschineller Teil des Netzwerkes darstellt, ist er auch nicht gelb gekennzeichnet, sondern cyan.
+         
+       
+    
+    \subsection{Anforderungen an den Statuswürfel}
+    Der Statuswürfel ist das Herzstück des Projekts und muss verschiedenste Funktionen erfüllen. Es muss ein Gerät sein, welches sowohl Rotationsdaten ermittelt, diese in einen Rotationszustand umwandelt und jenen daraufhin drahtlos weitergibt. Der Apparat soll zudem die Außentemperatur ermitteln können und diese ebenfalls kabellos über WLAN übermitteln. Das System muss weiter auch ohne konstante kabelgebundene Stromquelle agieren können. Somit ist ein Akkumulator unverzichtbar. 
+
+    Alle diese Anforderungen können mit dem richtigen Aufbau überwunden werden. Der ESP32-D1-Mini ist hierbei essentiell, da er zum einen WLAN-Fähig ist, wodurch eine drahtlose Datenübertragung ermöglicht wird, zum anderen aber auch einen leistungsfähigen Prozessor sowie ein integriertes I²C-Protokoll. Das ist relevant, da der Sensor der hier verwendet werden soll, der MPU-6050, auch integriert durch ein I²C-Protokoll adressiert werden kann. Er ist klein, 2cm x 1,5cm, und kann schnell und  präzise Rotationsdaten sowie Temperaturdaten auslesen.%Info auch hier schreiben?
+
+    %quelle statusblatt
+    
+    Die Verbindung zwischen ESP32-D1-Mini und dem Sensor geschieht über 4 Kabel, einem zur Spannungsversorgung von 3,3 V und einem zum Rückfluss. Zwei sind zudem durch das I²C-Protokoll benötigt. 
+
+    Der Sensor erzeugt nun 3 Rohdaten, welche im kartesischem Koordinatensystem die Beschleunigung auf der X, Y und Z Achse beschreiben. Da der Sensor jedoch auf der Fallbeschleunigung und Gewichtskraft basiert, kann ein starkes Bewegen und Krafteinwirken auf den Sensor zu Fehlmessungen führen. Daher soll aus drei Messreihen der Durchschnitt gebildet werden, sodass ein falscher Messwert durch eine Mittelung bereinigt werden kann. Zudem sind die Rohdaten ohne Einheit in einem 16-Bit Zweierkomplement angegeben, wodurch sie zum besseren Verständnis erst in eine Dezimalzahl umgewandelt werden sollen. Im Idealfall wird die Beschleunigung dann in alle Richtungen von 1 bis -1 angegeben, wobei $1=g$, $g$ ist die Erdanziehungskraft mit $g = 9,81m/s$, gilt. Dies sollte nach dem Datenblatt ungefähr der Fall sein, wenn die Beschleunigung 2$^{14}$ = 16.384 ausgegeben wird. Wenn der Sensor nun dem kartesischem Koordinatensystem als Kanten des Würfels ausgerichtet ist, ergibt sich für jeden Rotationszustand des Würfels eine Kombination aus den Werten X, Y und Z, in welcher je zwei Werte ca. einer $0$ entsprechen, während ein Wert entweder ungefähr einer $-1$ oder einer $1$ entspricht. Somit kann der Rotationszustand des Statuswürfels ermittelt werden. Es sollte zudem beachtet werden, dass dass der Würfel unter Umständen nicht auf einer ebenen Fläche liegt, weshalb die auf dem Sensor wirkende Gewichtskraft in der Wirkrichtung deutlich geringer ausfallen kann. Daher sollte allgemein eine Toleranz von 0,25 implementiert werden. Das entspricht mit der Formel $cos(\alpha)$ $=$ $F_{Wirk} / F_{g}$  und $F_{Wirk} = 0,75$ sowie $F_{g} = 1$ einem Toleranzwinkel von ungefähr $\alpha  \approx \ang{40}$. Die Kraft $"F"$ ist direkt proportional zu der Beschleunigung $"a"$ bei konstanter Masse $"m"$. Daher kann die Rechnung, welche mit der Kraft üblich ist auf die Beschleunigung $"a"$ übertragen werden.
+
+    Nun sollte eine Rotationszustand mit den Daten ermittelt werden können. Diesem Rotationszustand kann wie einem Würfel ein Wert zwischen 1 und 6 zugeordnet werden. Es ist theoretisch denkbar, dass durch Fehlmessung kein Rotationszustand festgestellt werden kann. Dies kann durch intensives schütteln oder einem um \ang{45} geneigten Statuswürfel geschehen. In diesem Fall soll ein weiteres mal gemessen werden und die Daten sollen nicht übersandt oder gespeichert werden.
+    
+    Weiter soll eine Temperatur beim Statuswürfel gemessen werden. Die Temperatur kann ebenfalls mit dem MPU-6050 gemessen werden, da es gleichzeitig auch als Thermometer fungiert. Die Temperatur kann so mit Leichtigkeit von dem ESP32-D1-Mini ausgelesen werden. Es gilt nur zu beachten, dass wahrscheinlich durch Widerstand in der Elektronik, welcher zu Abwärme führt, der Betrag der Temperatur zu hoch sein wird. 
+
+    Die ermittelten Daten sollen nun mit eine PUSH- oder GET-Request an die API in Form von zwei Zahlen gesandt werden. Um Energie und Strom zu sparen, sollen die Daten nur übermittelt werden, wenn es neue Daten gibt. Daher müssen die Daten auch auf dem ESP32 immer wieder abgespeichert werden, um zu kontrollieren, ob der nun ermittelte Rotationszustand neu ist. Zudem sollen bei dem Rotationszustand 1 schon neue Daten übersandt werden, auch wenn sich nur die Temperatur ändert. Das geschieht, da für den Status 1 eine temperaturabhängige Ausgabe auf dem E-Ink-Display geplant ist.
+
+    Um den Statuswürfel kabellos zu gestalten muss zudem ein Akkumulator, sowie eine Kabelverbindung zwischen dem Akkumulator und dem ESP32-D1-Mini eingebaut werden. Jedoch ist die Verbindung zu einem Akkumulator nicht im ESP32-D1-Mini integriert, weshalb auf den ESP32-D1-Mini ein Aufsatz aufgelötet sein soll, welcher einen Akkumulator unterstützt. Hier bietet sich das "AZDelivery Batterie Shield für Lithium Batterien für D1 Mini" an, da es eine einfache Bedienbarkeit besitzt.
+
+    Da der Statuswürfel kabellos mit einem Akkumulator betrieben wird, sollte auch so wenig Energie wie möglich verbraucht werden. Der ESP32 hat dabei eine besondere Funktion mit der Bezeichnung "deepsleep", welche den ESP32 vorübergehend für eine bestimmte Zeit deaktiviert. So kann zwischen dem messen des Status, bzw. der Temperatur, immer für eine bestimmte Zeit der "deepsleep" durchgeführt werden, wodurch die Energieeffizienz gesteigert werden soll. Dabei soll der ESP32 alle 5 Sekunden seinen Status messen und somit zwischen jeder Messung 5 Sekunden lang den "deepsleep" vollführen. Dazu soll für besondere Energieeffizienz ein Status existieren, welcher den "deepsleep" besonders lange für sehr gute  Energieeffizienz durchführt. Die Zeit soll hier 5 Minuten betragen und dem Rotationszustand soll der Status 6 zugeordnet sein.
+    
+
+    \subsection{Anforderungen an den Würfeldruck}
+    Damit nun auch noch ein Würfel entsteht, sollen alle technischen Komponenten in einen 3D-gedruckten Würfel eingesetzt werden. 
+
+    Damit man den Statuswürfel nun auch flexibel und intuitiv drehen kann, muss auch ein dementsprechend gut in der Hand liegender Würfel produziert werden, in welchem sich dann die verschiedenen Komponenten befinden. Um eine derart feine und komplexe Form herzustellen, wurde sich für ein 3D-Druck-Verfahren entschieden, da durch ein derartes Verfahren fein und mit viel Präzision gearbeitet werden kann, sowie schnell eine Herstellung erneut durchgeführt werden kann, falls der Würfel nicht exakt modelliert wurde. Modellieren beschreibt dabei das gestalten, bilden oder formen des Modells für den Statuswürfel, mit welchem er dann gedruckt werden soll. 
+
+    Zum Modellieren kann man verschiedenste Programme bzw. Software verwenden. Die bekanntesten zum Modellieren für den 3D-Druck sind TinkerCAD, Blender, FreeCAD, OpenSCAD, Cura oder Zbrush. Das CAD im vielen dieser Programme steht für "Computer-Aided Design" oder zu deutsch "rechnerunterstütztes Konstruieren". In diesem Fall wurde sich für TinkerCAD entschieden, da es online und konstenlos eine breite und sehr einfach zu bedienende Nutzeroberfläche bietet, durch welche man mit Leichtigkeit einfache Formen, wie Würfel, Zylinder, Quader allgemein oder Prismen mit einer n-Eckigen Grundfläche, in sämtlichen Variationen zusammenfügen kann, wie es auch für den Statuswürfel benötigt wird. 
+    
+    Die Optimalgröße für einen handlichen Statuswürfel orientiert sich bei der Größe eines üblichen Zauberwürfels oder umgangssprachlich "Rubik´s-Cube", da dieser mit seinen 5,7cm Kantenlänge eine sehr handliche Form darstellt. Beim Modellieren müssen zudem einige Eigenschaften des Würfels beachtet werden. Das größte Bauelement des Statuswürfels ist der Akkumulator, welcher mit einer Länge von 6cm, an seinen elektrischen Spannungsquellen und seinem Kabelursprung sogar 6,5cm, einer Breite von 5cm und einer Dicke von 0,5cm die Maße des Statuswürfels Maßgeblich bestimmen. Da der Statuswürfel ein Würfel sein soll, sowie eine Wanddicke nach außen von in der Regel 0,5cm, jedoch minimal 0,2cm haben soll, ist eine allgemeine Kantenlänge im äußeren Bereich von 7cm angebracht. 7cm sind zwar 1,3cm länger, als ein handelsüblicher Zauberwürfel, jedoch ist auch das noch eine sehr handliche Form. Weitere in der Modellierung zu berücksichtigende Objekte sind neben dem ESP32 und dem MPU-6050, für welche jeweils eine passende Plattform bzw passende Einkerbungen modeliert wurden, auch eine Öffnung für Stromzufuhr für den Akkumulator bzw eine Öffnung um die Software des ESP32 auch im Nachhinein noch verändern zu können. Des weiteren muss noch ein Loch für einen Reset-Taster gelassen werden, da dieser bei unerwartet akzidentell auftretenden Fehlern gebraucht werden könnte.
+    
+    Zuletzt sollte bedacht sein, dass alle Komponenten an deren korrekte Position platziert werden müssen und somit eine verschließbare Öffnung für ESP32, MPU-6050 und die Batterie existieren muss und zudem gilt es allgemein zu beachten, dass ein 3D-Drucker nicht wahllos Strukturen in der Luft bzw ohne stabilen Unterbau drucken kann, denn ein handelsüblicher 3D-Drucker ist nur fähig Überhänge mit bis zu 60° Neigung sicher zu drucken. 
+    
+    Daher ist es sinnvoll, den Würfel in zwei circa gleich großen Hälften zu drucken, weil so zum einen das Problem des Druckes mit Überhang als auch das Problem der Platzierung der Komponenten im Statuswürfel geschickt und problemlos umgangen werden kann. 
+    
+    
+    
+
+    \subsection{Anforderungen an den Anzeigebildschirm}
+    %Allgemeine Beschreibung
+    Das E-Ink Display kann benutzt  werden, um jeden Pixel des selben einzeln rot, weiß oder schwarz erscheinen zu lassen. Grundsätzlich soll das E-Ink-Display den Rotationszustand des Statuswürfels übermittelt bekommen, um so abhängig von jenem übermittelten Informationen wie den Rotationszustand das Display zu verändern. Das Ziel ist schließlich mit den Daten der API den Beschäftigungsstatus auf dem E-Ink-Display darzustellen.
+
+    Um die zu bewerkstelligen sollte ein ESP32 an das E-Ink-Display angeschlossen werden. Dieser ist dann in der Lage das E-Ink-Display beliebig zu verändern. Des Weiteren kann der ESP32 eine WLAN-Verbindung herstellen und so mittels http-Get-Requests alle nötigen Daten von der API anfordern. Die API ist dabei ein ständig aktiver und adressierbarer Server, während der ESP32 eine energieeffiziente Maschiene sein soll, welche nicht ständig aktiv ist. Daher kann die API nicht immer den ESP32 adressieren und erreichen. Der ESP32 jedoch kann jederzeit die API adressieren und mit ihr kommunizieren, da diese durchgehend aktiviert ist.
+
+    Um seine Funktion zu erfüllen muss der ESP32 angeschlossen an das E-Ink-Display zuerst von der API der derzeitigen Rotationszustand des Statuswürfels anfordern. Danach muss je nach empfangenem Rotationszustand das E-Ink-Display eine Statusmeldung anzeigen. Alle verschiedenen Statusmeldungen sind in der nachfolgender Abbildung \ref{fig:Vorlage_E-Ink} grafisch dargestellt.
+    
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.75\textwidth]{Bilder/E-Ink-Vorlage.png}
+        \caption{Entwürfe für die Bildschirme des E-Ink-Displays}
+        \label{fig:Vorlage_E-Ink}
+    \end{figure}
+
+    Die Abbildung \ref{fig:Vorlage_E-Ink} stellt alle vier Vorlagen für die Zustände des E-Ink-Displays dar. In der Abbildung \ref{fig:Vorlage_E-Ink} sieht man links oben den Zustand "6". Das E-Ink-Display soll einen schwarzen Hintergrund mit einer dicken weißen Schrift in der Mitte, "DEAKTIVIERT!", zeigen. Das besondere an diesem Zustand ist, dass sich hier der ESP32 wie auch beim Statuswürfel des gleichen Zustandes immer kurz in einen "deepsleep" begeben soll und bei dem Status "6" soll auch hier der "deepsleep" mit fünf Minuten statt sonst wie üblich 5 Sekunden bedeutend länger sein. 
+
+    Rechts daneben in der Abbildung \ref{fig:Vorlage_E-Ink} ist eine Vorlage für den Status "1" abgebildet. Das E-Ink-Display soll hier die aktuelle Temperatur, die Uhrzeit der letzten Änderung sowie einen kleinen Satz zu derzeitigen Temperatur projizieren. Dazu muss bei dem Status "1" auch bei nur einer Temperaturänderung das E-Ink-Display den Text neu projizieren. Zudem soll der Satz, welcher zentral angezeigt wird, auch veränderbar sein und somit sowohl in der API gespeichert, als auch von dem ESP32 angefordert werden.
+
+    Des weiteren zeigt die Abbildung \ref{fig:Vorlage_E-Ink} links unten die Darstellung des Status "2". Diese soll lediglich aus einem Bild bestehen, welches auch in der API gespeichert werden und von dem ESP32 nur angefordert werden soll.
+
+    Zuletzt stellt die Abbildung \ref{fig:Vorlage_E-Ink} rechts unten beispielsweise eine E-Ink-Display-Vorlage dar, welche von dem Status "3", "4" oder "5" initiiert werden sollen. Hierbei steht links oben eine Temperatur sowie rechts oben eine Zeit zum Zeitpunkt der letzten Änderung. Mittig steht im oberen unteren unteren Teil ein von der API bereitgestellter Text, welcher einmal eine Zustandsbeschreibung sein soll und einmal eine Anweisung an die lesende Person. Die Anweisung soll zudem von einem rotem Rechteck eingerahmt sein, um ihre Wichtigkeit zu unterstreichen.
+
+    Um die Richtigkeit des von dem E-Ink-Display dargestellten Status zu gewährleisten, sollte mindestenz aller 10 Sekunden geprüft werden, ob die abgebildete Darstellung noch aktuell ist.
+    
+    
+    %In der Abbildung sieht man zunächst links oben einen Zustand, welcher Energie sparen soll und welcher schlicht anzeigen soll, dass der Statuswürfel derzeit nicht in Benutzung ist. Diesem Bild wird zudem der Zustand 6 zugeordnet. Rechts oben in der Abbildung \ref{fig:´Vorlage_E-Ink} ist zudem ein allgemeiner Status, Zustand 1, dargestellt. Dieser soll konstant die korrekte Temperatur ausgeben, zusammen mit der Zeit, zu welcher diese Temperatur erreicht wurde. Darunter soll zudem abhängig von der Temperatur eine  
+    
+    %erst beschreiben, dann was besonders ist(nur wenn was so ist...), dann was man von der API braucht.,
+
+    
+    \subsection{Anforderungen an die API}
+
+    Die API stellt eine Verbindungsstelle zwischen dem Statuswürfel, dem E-Ink-Display und der Website dar. Wie schon angedeutet werden zu ihr Daten übersandt. Am einfachsten bewerkstelligt man dies über WLAN oder Lan, welches an der API und den beiden ESP32 anliegen muss. Damit diese Technik funktionieren kann, müssen sich alle Geräte in einem Netzwerk befinden, über welches die lokale IP-Adresse der API bekannt ist. Die API stellt eine Verbindungsstelle zwischen dem Statuswürfel, dem E-Ink-Display und der Website dar. Damit diese Geräte mit der API kommunizieren können und die API auf einem gewöhnlichem Windows Rechner laufen kann. 
+
+    Die API muss zudem einige Funktionen erfüllen. Zuallererst muss sie ständig erreichbar sein, damit sowohl der Statuswürfel, die API und auch die Website ständig ihr Daten senden können oder Daten von ihr anfordern können. Spezifiziert werden sollten auch die Daten, welche die API speichern sollte. Der Grund der Speicherung ist die mehrfache Nutzung der Daten zwischen den einzelnen Komponenten mit denen die API kommuniziert. 
+    
+    Daher sollte die API den derzeit vom MPU-6050 gemessenen Status sowie Temperatur gespeichert werden um die von dem Statuswürfel bestimmten Daten zu speichern, bis neue ermittelt werden. Des Weiteren sollten für das E-Ink-Display ebenfalls Temperatur und Status gespeichert werden, jedoch zusätzlich ein Bild, ein Text, welcher je nach Status wie in der Tabelle \ref{tab:Rot-Tex} gezeigt verändert und generell auch im Rahmen der Website anpassbar ist, sowie für die Temperatur eine Einschätzung, ob diese kalt, kühl, angenehm, heiß oder sehr heiß ist und dazu ein passender Text, welcher je nach Einschätzung an das E-Ink-Display weitergegeben wird. 
+    
+    \begin{table}[h]
+        \centering
+        \begin{tabular}{cc}
+            \textbf{Rotationszustand} & \textbf{Anweisung bzw. Text dazu} \\
+            1 & Wetterseite / Bildschirmschoner\\
+            2 & hier wird ein voreingestelltes Bild angezeigt\\
+            3 & Es ist frei, bitte hereintreten\\
+            4 & In einer Besprechung, bitte nicht stören\\
+            5 & Gerade intensiv am arbeiten, bitte nicht stören\\
+            6 & DEAKTIVIERT\\
+        \end{tabular}
+        \caption{Zuordnungen zwischen Rotationszuständen und Texten}
+        \label{tab:Rot-Tex}
+    \end{table}
+
+
+    \subsection{Anforderungen an die Website}
+    Die Website hat eine besondere Funktion in dem Netzwerk, da auch ohne ihr der Betrieb des Systems funktioniert. Jedoch soll sie dem Nutzer einige nützliche Funktionen ermöglichen, welche  die Funktionalität des Statuswürfels entweder erweitern, ändern oder vereinfachen.
+
+    In erster Linie soll die Website die Funktion des E-Ink-Displays übernehmen können, indem es ähnlich zum E-Ink-Display, beziehungsweise dessen ESP32, entsprechende Daten wie den Status anfordert und darstellt. Über dies soll der Nutzer über der Website die Möglichkeit geboten werden gewisse Texte zu Verändern wie der Text "DEAKTIVIERT!" des Status "6", der Text "In einer Besprechung" gefolgt von "Bitte nicht eintreten!" des Status "3" oder auch die Temperaturtexte wie "Es ist heute angenehm". Durch diese Funktionen der Website soll eine Personalisierung des Statuswürfels vereinfacht möglich sein.
+    
+    
+\newpage
+\section{Durchführung} %Preise? nö
+    \subsection{Der Statuswürfel}
+    Der Statuswürfel besteht grob gesagt aus einem ESP32-D1-Mini in seinem Zentrum, welcher mittels des Sensors MPU-6050 seinen eigenen Rotationszustand auslesen und folglich die ermittelten Rotationsdaten der API übersenden soll. Alle unter dem Kapitel abgebildete Dateien sind im Anhang im Unterordner "Statuswürfel" vollständig aufzufinden.
+        \subsubsection{Auslesung der Daten des MPU-6050}
+        Um die Sensordaten des MPU-6050 zu erhalten, wurde der folgende in Abbildung \ref{code:MPU-6050} verkürzt dargestellte Code mittels Micro-Python geschrieben. Das vollständige Programm liegt unter dem Namen "mpu6050.py" im Anhang anbei.
+        
+        \begin{figure}[h]
+        \centering
+        \begin{minted}[frame=lines, linenos]{python}
+class accel():
+    ...
+    def get_raw_values(self):
+        self.iic.start()
+        a = self.iic.readfrom_mem(0x68, 0x3B, 14)
+        self.iic.stop()
+        return a
+
+    def bytes_toint(self, firstbyte, secondbyte):
+        if not firstbyte & 0x80:
+            return firstbyte << 8 | secondbyte
+        return - (((firstbyte ^ 255) << 8) | (secondbyte ^ 255)+1)
+
+    def get_values(self):
+        raw_ints = self.get_raw_values()
+        vals = {}
+        vals["AcX"] = self.bytes_toint(raw_ints[0], raw_ints[1])
+        vals["AcY"] = self.bytes_toint(raw_ints[2], raw_ints[3])
+        vals["AcZ"] = self.bytes_toint(raw_ints[4], raw_ints[5])
+        vals["Tmp"] = self.bytes_toint(raw_ints[6], raw_ints[7]) 
+                      / 340.00 + 36.53
+        ...
+        return vals 
+        \end{minted}
+        \caption{Ausschnitt der Datei "mpu6050.py"}
+        \label{code:MPU-6050}
+        \end{figure}
+
+         Um das Programm zu verstehen, sollte man von oben anfangen. Als erstes wird in Zeile 3 die Funktion $"self.get\_raw\_values(self)"$ definiert. Diese initialisiert das I$^{2}$C-Protokoll um mit diesem den MPU-6050 in Zeile 5 mittels der Adresse $"0x68"$ zu adressieren, sowie von der Speicherposition $"0x3B"$ des MPU-6050 $"14"$ Bytes auszulesen, welche darauf alle über einer temporären Liste $"a"$ in Zeile 7 zurückgegeben werden.
+
+         Die darauf folgende Funktion $"self.bytes\_toint(self, firstbyte, secondbyte)"$ soll zwei Bytes einlesen, welche zusammen eine Zahl im Zweierkomplement bilden und daraus eine Zahl im Einerkomplement, welche besser lesbar ist, formen. Die Umwandlung erfolgt wie es im Buche steht. Wenn des erste Bit eine 0 ist, dann werden beide Bytes schlicht aneinandergefügt und bilden eine Zahl. Wenn das erste Bit jedoch eine 1 ist, dann werden beide beide Bytes invertiert, dann zusammengefügt und dann zudem mit 1 addiert sowie folglich mit -1 multipliziert, da die 0 nicht berücksichtigt werden muss. Das Ergebnis ist, dass  zwei Bytes zu einer Zahl von -32768 bis 32767 umgewandelt werden.
+        
+        Die Funktion, welche die letztlich die Sensordaten zurückgeben soll, ist die in Zeile 14 definierte $"get\_values(self)"$ Funktion. In dieser werden zuerst die Rohmesswerte, welche durch die Funktion $"self.get\_raw\_values()"$ erhalten werden, in der Variable $"raw\_ints"$ gespeichert. Zwei der 14 Bytes liefern je einen Messwert. Die ersten sechs Bytes ergeben die drei Beschleunigungswerte und die zwei folgenden sind für die Temperatur relevant. Die restlichen sind nur für den im MPU-6050 verbauten Gyrosensor bzw. das Gyrometer zuständig. Daher werden auch je zwei Bytes, welche zusammen im Zweierkomplement formatiert sind, gemeinsam mit der Funktion $"self.bytes\_toint(self, firstbyte, secondbyte)"$ in ein Einerkomplement formatiert. Dieses Einerkomplement wird dann in einer Liste, $"vals"$, unter den Bezeichnungen $"AcX"$, $"AcY"$, $"AcZ"$ und $"Tmp"$ gespeichert und mittels der Liste zurückgegeben.
+
+        Somit kann man mit der Funktion $"get\_values(self)"$ eine Messreihe in Form einer Liste des Sensors auslesen.
+       
+        \subsubsection{Integrierung der I$^{2}$C Übertragung}
+        Das I$^{2}$C-Protokoll ist wie schon erwähnt in "MicroPython" integriert, weshalb die Umsetzung erleichtert verläuft. In den folgenden Abbildungen \ref{code:I2C-main} und \ref{code:I2C-mpu} ist die Integrierung des I$^{2}$C-Protokolls in den Dateien "main.py" und "mpu6050.py", um mit dem MEMS MPU-6050 zu kommunizieren, verkürzt dargestellt.
+
+        \begin{figure}[h]
+        \centering
+        \begin{minted}[frame=lines, linenos]{python}
+from machine import SoftI2C, Pin
+import mpu6050
+
+i2c = SoftI2C( scl=Pin(22), sda=Pin(21), freq=100000)     
+mpu= mpu6050.accel(i2c)
+...
+        \end{minted}
+        \caption{Ausschnitt der Datei "main.py"}
+        \label{code:I2C-main}
+        \end{figure}
+
+        In der Abbildung \ref{code:I2C-main} wird zunächst die Integrierung des I$^{2}$C-Protokolls in die "main.py" des Statuswürfels gezeigt. Zuerst wird von dem Modul $"machine"$ $"$$SoftI2C"$ importiert.  $"$$SoftI2C"$ verlangt dabei nach einem Pin für für die "serial clock" und einem Pin für die " serial data". Die Pinbezeichnungen wurden bereits in Abbildung \ref{fig:ESP32-Pinout} visualisiert. Des weiteren fordert $"$$SoftI2C"$ eine Frequenz, hier 100.000, mit welcher die Übertragung durchgeführt werden soll. $"$$SoftI2C"$ wird zudem in der Variable $"$$i2c"$ gespeichert, welche dann, in Zeile 5, ein in "mpu6050.py" abgespeicherte Klasse initialisiert und diese Klasse unter der Variable $"mpu"$ speichert, welche später relevant wird.
+        
+        \begin{figure}[h]
+        \centering
+        \begin{minted}[frame=lines, linenos]{python}
+class accel():
+    def __init__(self, i2c, addr=0x68):
+        self.iic = i2c
+        self.addr = addr
+        self.iic.start()
+        self.iic.writeto(self.addr, bytearray([107, 0]))
+        self.iic.stop()
+    ...
+        \end{minted}
+        \caption{Ausschnitt der Datei "mpu6050.py"}
+        \label{code:I2C-mpu}
+        \end{figure}
+
+        Diese Initialisierung der Klasse $"$$accel"$ ist in Abbildung \ref{code:I2C-mpu} dargestellt. Dabei wird über der Variable $"$$i2c"$, bzw. $"$$iic"$ die $"$$SoftI2C"$ Funktion, in welcher zudem die Pin-Informationen gespeichert sind, übertragen. Unter $"$$addr"$ wird die Adresse des MPU-6050 gespeichert. Darauf wird in Zeile 5 die $"$$i2c"$-Übertragungsmethode gestartet, und in Zeile 6 werden mit der $"$$iic.writeto"$-Funktion dem unter $"$$addr"$ Gerät die Bytes "107" \space und "0", in hexadezimaler Form wie beispielsweise "0x6B" \space $\equiv$ 107, übertragen. Diese beiden Bytes führen zum Aufwachen des MPU-6050, damit von diesem später Rotationsdaten ausgelesen werden können.
+        
+        \subsubsection{Auswertung der Daten}
+
+        Die nachfolgende Abbildung \ref{code:Werte in main holen} ist ein verkürzter Ausschnitt aus der Datei "main.py"\space ab Zeile 16. Die Funktion $"getAnswer()"$ soll zuerst den Zustand des Statuswürfels auslesen, wie es die Abbildung \ref{code:Werte in main holen} zeigt.
+        
+        \begin{figure}[h]
+        \centering
+        \begin{minted}[frame=lines, linenos]{python}
+def getAnswer():
+    wert1 = mpu.get_values()
+    wert2 = mpu.get_values()
+    wert3 = mpu.get_values()
+    x = round((wert1["AcX"]+wert2["AcX"]+wert3["AcX"])/16384/3, 2)
+    y = round((wert1["AcY"]+wert2["AcY"]+wert3["AcY"])/16384/3, 2)
+    z = round((wert1["AcZ"]+wert2["AcZ"]+wert3["AcZ"])/16384/3, 2)
+    Tmp = round(2*(wert1["Tmp"]+wert2["Tmp"]+wert3["Tmp"])/3, 0)/2 
+    
+    if x >= 0.75 and -0.25 < y < 0.25 and -0.25 < z < 0.25:
+        ausgabewert = "1" # oben ist oben
+    elif x <= -0.75 and -0.25 < y < 0.25 and -0.25 < z < 0.25:
+        ausgabewert = "6"# unten ist oben
+    elif z <= -0.75 and -0.25 < y < 0.25 and -0.25 < x < 0.25:
+        ausgabewert = "4"# links ist oben
+    elif z >= 0.75 and -0.25 < y < 0.25 and -0.25 < x < 0.25:
+        ausgabewert = "3"# rechts ist oben
+    elif y <= -0.75 and -0.25 < x < 0.25 and -0.25 < z < 0.25:
+        ausgabewert = "5"# hinten ist oben
+    elif y >= 0.75 and -0.25 < x < 0.25 and -0.25 < z < 0.25:
+        ausgabewert = "2"# vorne ist oben
+    else:
+        return None #nichts Konkretes ist oben
+    ...
+        \end{minted}
+        \caption{Ausschnitt der Datei "main.py" des Statuswürfels}
+        \label{code:Werte in main holen}
+        \end{figure}
+
+        In der Abbildung \ref{code:Werte in main holen} werden zuerst, wie auch schon unter der Teilüberschrift "4.1.1 Auslesung der Daten des MPU-6050" \space erklärt, Messreihen des Sensors, MPU-6050, erstellt und in den Variablen $"wert1"$, $"wert2"$ und $"wert3"$ zwischengespeichert. Aus diesen Listen der Messreihen werden dann eine Beschleunigung in x-, y-, und z-Richtung sowie eine Temperatur durch eine Bildung des Mittelwertes aus den jeweils 3 Einzelwerten bestimmt. Zudem bei der Beschleunigung der Messwert durch 16.384 geteilt, da das ungefähr der Betrag der Hälfte des Maximalwertes 32.767 und Minimalwertes -32.768 ist und die Erdbeschleunigung $g$ ungefähr die Hälfte des Maximalwertes sein muss. Zudem werden die Beschleunigungen auf eine Nachkommastelle und die Temperatur auf Komma fünf gerundet.
+        
+        Nach diesen Operationen sollten $"x"$, $"y"$ und $"z"$ einen Wert zwischen -2 und 2 annehmen. Dazu hat die Erdbeschleunigung $g$ einen Betrag von 1. In der Konzeption wurde zudem errechnet, dass die Fehlerspanne ca. 0,25 betragen sollte, damit bei einem sehr schiefem Untergrund von bis zu 40\textdegree \space oder einem gravierendem Messfehler durch Schütteln oder Ähnlichem der Rotationszustand noch sicher bestimmt werden kann. Um einen Rotationszustand zu erkennen, müsste auf einer Achse die Beschleunigung $a \approx \pm g \approx \pm 1$ und auf den anderen beiden Achsen müsste die Beschleunigung $a  \approx 0$ betragen. Diese Abstufung wird auch in Abbildung \ref{code:Werte in main holen} ab Zeile 10 in einer $"$$if"$-Schleife ausgeführt, sodass bei jedem dieser Möglichkeiten der Variable $"$$ausgabewert"$ eine Zahl zwischen 1 und 6 zugeordnet wurde. Falls der Rotationszustand jedoch nicht ermittelt werden konnte, so wird, wie in Zeile 22 ersichtlich, $"None"$ zurückgegeben.
+
+
+        \begin{figure}[h]
+        \centering
+        \begin{minted}[frame=lines, linenos]{python}
+def getAnswer():
+    ...
+    database = helper.load_data("RotInfo.dat")
+    if database["Zustand"] == ausgabewert:
+        if ausgabewert == "1": # Temperatur nur bei 1 übertragen
+            if Tmp != database["Temperatur"]:
+                database["Temperatur"] = Tmp
+                helper.save_data(database, "RotInfo.dat")
+                return ausgabewert, Tmp
+    else:
+        database["Zustand"] = ausgabewert
+        database["Temperatur"] = Tmp
+        helper.save_data(database, "RotInfo.dat")
+        return ausgabewert, Tmp
+    return None
+        \end{minted}
+        \caption{Ausschnitt der Datei "main.py" \space des Statuswürfels}
+        \label{code:Werte in main auswerten}
+        \end{figure}
+
+        In Abbildung \ref{code:Werte in main auswerten} kann man dieselbe Funktion wie in Abbildung \ref{code:Werte in main holen} erkennen, jedoch eine Fortführung, denn in dergleichen Funktion wird der erfasste Rotationszustand ausgewertet. Dazu wird zuerst die Datei "RotInfo.dat", welche alte Rotationsdaten in einem json-Dateiformat speichert, mittels einer "helper.py"-Datei geöffnet und dessen Inhalt in der Variable $"database"$ gespeichert. Der relevanten Inhalt der "helper.py" ist dabei in Abbildung \ref{code:Hepler.py bei Statuswürfel} zu finden. 
+
+        In $"database"$ sind im Stil einer json-Datei zwei Daten, die Temperatur und der (Rotations-)Zustand, gespeichert. Nun wird der derzeit gemessene Rotationszustand mit dem in der $"database"$ vorliegenden Zustand verglichen und wenn diese nicht gleich sind, dann sollen die neue Temperatur und der neue Rotationszustand sowohl zurückgegeben werden, als auch in der "RotInfo.dat" \space abgespeichert werden. Dadurch wäre bei der nächsten Messung des Rotationszustandes des Statuswürfels dieser Zustand gleich dem abgespeichertem, altem Zustand.
+
+        Wenn der in "RotInfo.dat" \space abgespeicherte Rotationszustand nun gleich dem ermitteltem Zustand ist, dann soll $"None"$ zurückgegeben werden und die abgespeicherten Daten sollen unverändert bleiben, es sei denn der gemessene Rotationszustand entspricht der "1". In diesem Fall wird geprüft, ob sich die vom Sensor erfasste Temperatur mit der in "RotInfo.dat" \space abgespeicherten unterscheidet. Wenn dies der Fall sein sollte, dann wird nicht $"None"$ zurückgegeben, sondern es werden der gemessene Rotationsstatus und die gemessene Temperatur zurückgegeben. Die neue Temperatur wird zudem in der Datei "RotInfo.dat" \space gespeichert. Der Rotationszustand muss nicht gespeichert werden, da dieser sich nicht verändert hat.
+
+        \begin{figure}[h]
+        \centering
+        \begin{minted}[frame=lines, linenos]{python}
+def save_data(data, name):
+    f=open(name,"w") # opens a file for writing
+    f.write(ujson.dumps(data))
+    f.close()
+
+def load_data(name):
+    f=open(name,"r") # opens a file for reading
+    data = ujson.load(f)
+    f.close()
+    return data
+
+def do_connect():
+    import network
+    from config import ssid, pw
+    WLAN = network.WLAN(network.STA_IF)
+    if not WLAN.isconnected():
+        WLAN.active(True)
+        WLAN.connect(ssid, pw)
+        while not WLAN.isconnected():
+            pass
+        \end{minted}
+        \caption{Ausschnitt der Datei "helper.py" des Statuswürfels}
+        \label{code:Hepler.py bei Statuswürfel}
+        \end{figure}
+
+        \subsubsection{Übersenden der Daten an die API}
+        
+        \begin{figure}[h]
+        \centering
+        \begin{minted}[frame=lines, linenos]{python}
+Antwort = getAnswer() # Antwort = Rotatioszustand
+if Antwort != None:
+    helper.do_connect()
+    import config
+    url1 = config.Link + "/stat/" + str(Antwort[0])
+    url2 = config.Link + "/tempstat/" + str(Antwort[1])
+    urequests.post(url1)
+    urequests.post(url2)
+    if Antwort[0] == "6":
+        Zeit = 300000 # = 300s = 5 min
+    else:
+        Zeit = 5000
+    deepsleep(Zeit)
+deepsleep(5000)
+        \end{minted}
+        \caption{Ausschnitt der Datei "main.py" des Statuswürfels}
+        \label{code:Übertragen der Daten}
+        \end{figure}
+
+        Der durch Abbildung \ref{code:Übertragen der Daten} repräsentierte Code schließt das Programm "main.py" \space des Statuswürfels ab. Zuerst wird durch die Rückgabe der die in Abbildung \ref{code:Werte in main holen} und \ref{code:Werte in main auswerten} erklärte Funktion $"getAnswer()"$ die Variable $"$$Antwort"$ definiert. Wenn diese Antwort $"None"$ ist, dann soll nichts passieren und der ESP32 geht in den energiesparenden "deepsleep" \space für fünf Sekunden.
+
+        Wenn jedoch die Antwort ungleich $"None"$ ist, dann soll sich der ESP32 mittels einer Funktion $"do\_connect()"$ aus "helper.py", wie in Abbildung \ref{code:Hepler.py bei Statuswürfel} ersichtlich, mit einem WLAN verbinden. Dazu wird die Bibliothek "network" \space verwendet, welche alle dazu nötigen Funktionen bereitstellt.  In Zeile 16 der Abbildung \ref{code:Hepler.py bei Statuswürfel} wird zunächst geprüft, ob eine Verbindung besteht. Wenn dies nicht der Fall ist, dann wird mittels der in "config.py", in Abbildung \ref{code:config_Statuswürfel} sichtbar, gespeicherten Variablen die SSID und das Passwort in der Funktion $"connect(ssid, passwort)"$ verwendet um sich mit dem Netzwerk zu verbinden. Darauf wird in Zeile 19f noch gewartet, bis die Funktion abgeschlossen ist, bzw. Verbindung besteht.
+        \begin{figure}[h]
+        \centering
+        \begin{minted}[frame=lines, linenos]{python}
+ssid = 'Netzwerkname' 
+pw = 'Passwort'
+Link ="http://192.168.1.190:8000"
+        \end{minted}
+        \caption{"config.py" des Statuswürfels}
+        \label{code:config_Statuswürfel}
+        \end{figure}
+        
+        Verbunden mit einem WLAN kann nun die Übertragung der neuen Daten an die API beginnen. Dazu führt der Statuswürfel zwei http-Push-Requests aus, welche aus drei Teilen bestehen. Der erste Teil ist der in "config.py" gespeicherte $"Link"$, welcher den Server, bzw. die API adressiert. Das kann zum Beispiel die lokale IP-Adresse zusammen mit einem zugewiesenem Port sein, über welche die API auffindbar ist. Darauf folgt, getrennt mit einem "/" eine Information, welche Daten übersandt werden. In diesem Fall steht $"stat"$ für (Rotations-)Status und $"tempstat"$ für Temperatur-Status, bzw. nur Temperatur. Zuletzt folgt nach einem weiterem "/" die Information, welcher Status neu ist bzw. übergeben werden soll.
+
+        Nachdem diese http-Push-Requests in Zeile 7f der Abbildung \ref{code:Übertragen der Daten} übersandt wurden, soll die Dauer des "deepsleep" \space festgelegt werden. Dieser soll fünf Sekunden lang dauern, es sei denn der Zustand $"6"$, welcher den Statuswürfel energieeffizient in einen Ruhemodus versetzen soll, ist aktiviert. In diesem Fall soll der "deepsleep" fünf Minuten lang andauern.
+
+        Nach dem "deepsleep" startet sich der Mikro-Controller neu, wodurch automatisch zuerst die "boot.py" ausgeführt wird, welche leer ist, gefolgt von der "main.py". Daher ist der ESP32 in einer ständigen Schleife gefangen, in welcher er den Sensor ausliest und neue Daten an die API sendet.
+        
+        Die Datei "config.py", welche auch in Abbildung \ref{code:config_Statuswürfel} wiedergegeben ist, soll  einzelne veränderbare Daten, wie den Link speichern, damit diese im Nachhinein einfach in dieser Datei geändert werden können, anstatt die exakte Stelle der Verwendung in dem "MicorPython"-Code zu suchen.
+        
+        
+
+        
+        \subsubsection{Genauigkeit der Messungen}% empirische Ermittlung des Temperaturfehlers
+     Die Genauigkeit der Messungen des MPU-6050 ist für die Funktionsweise des Statuswürfels essenziell. In der Durchführung wird von drei Werten der Mittelwert gebildet, um sicher einen eindeutigen Status zu erhalten.  Diese Mittelung aus drei Werten geschieht jedoch pauschal, da ein falsches Messergebnis oder eine klare Fehlmessung nicht das Ergebnis beeinflussen sollte. Zusätzlich ist bereits eine große Spanne der Eingabe für die einzelnen Status implementiert, jedoch nicht nur für einen Messfehler, sondern auch für den Fall eines ungeraden Untergrundes und eine Messung im Wackeln, da der Sensor die Beschleunigung misst. Daher soll nun geschaut werden, ob auch ein signifikanter Messfehler in der Datenauswertung berücksichtigt werden muss.
+
+    Um die Genauigkeit des Sensors zu messen, sollte man möglichst viele Messungen bei gleichen Bedingungen machen und feststellen, wie hoch die durchschnittliche Abweichung und eine hohe Abweichung ist. Dabei wird zuerst festgestellt, dass die beschriebenen Messungen eine X-Beschleunigung, eine Y-Beschleunigung und eine Z-Beschleunigung darstellen. Diese werden von 3 gleichen, jedoch in der Achse gedrehten Sensoren gemessen. Da die Sensoren die gleichen sind, ist es nur nötig in einer Bewegungsrichtung den Messfehler zu messen.
+    
+    Dazu wurde ein neues Programm mittels Micro-Python geschrieben, welches in Abbildung \ref{code:Messgenauigkeit} dargestellt ist. Das in Abbildung \ref{code:Messgenauigkeit} sichtbare Programm beschreibt eine ähnliche Datenerhebung wie es zu den Programmen in Abbildungen \ref{code:MPU-6050}, \ref{code:I2C-main} und \ref{code:Werte in main holen} schon erklärt wurde. Zuerst werden in Abbildung \ref{code:Messgenauigkeit} bis Zeile 8 für den ESP32 und den MPU-6050 Metadaten definiert. Danach wird eine leere Liste, Zeile 10, erstellt, an welche nun in einer Schleife 1.000 Mal ein gemessener Wert der Beschleunigung in X-Achsen-Richtung angefügt wird. Schließlich wird die Liste, nun bestehend aus 1.000 Elementen ausgegeben. 
+
+
+    %Wenn nun ein Rotationszustand sowie eine Temperatur ermittelt werden konnte, dann soll zuerst nachgeschaut werden, ob sich die neu erhobenen Daten sich mit denen in einem Speicherdokument "RotInfo.dat" decken. Wenn dies der Fall ist, dann sich der ESP32 kurz in einen "deepsleep" begeben. Wenn sich jedoch die Daten nicht decken und sich die Rotationsdaten mit denen in der Datei "RotInfo.dat" nicht decken, dann sollen die neuen Daten erst an eine API verschickt werden und erst darauf in dem Dokument "RotInfo.dat" abgespeichert werden, da nur nach erfolgreicher Übersendung sichergestellt werden kann, dass sich in "RotInfo.dat" die gleichen Messwerte befinden wie übersendet wurde. Wenn man zuerst die neuen Daten abspeichern würde, dann könnte es sein, dass die Übersendung scheitert und die API von einem falschem Zustand ausgeht.
+
+    \begin{figure}[ht]
+    \centering
+    \begin{minted}[frame=lines, linenos]{python}
+import time
+from machine import SoftI2C
+from machine import Pin
+import MPU-6050
+
+i2c = SoftI2C( scl=Pin(22), sda=Pin(21), freq=100000)     
+#initializing the I2C method for ESP32
+mpu= MPU-6050.accel(i2c)
+
+Liste = []
+
+for i in range(1000):
+    xwert = mpu.get_values()["AcX"]
+    wert = xwert/16384
+    Liste.append(wert)
+
+print(Liste)
+    \end{minted}
+    \caption{Micro-Python Code für das Aufnehmen der Messwerte}
+    \label{code:Messgenauigkeit}
+    \end{figure}
+
+    Diese Messreihe kann darauf in ein Tabellenkalkulationsprogramm eingegeben werden, hier wurde Geogebra verwendet, welches die Messungen in ein Boxplot-Diagramm umwandelt. Dieses ist in der nachfolgenden Abbildung \ref{fig:Boxplot-Messwerte} abgebildet. Ein Boxplot Diagramm ist ein Diagrammtyp, welches häufig zur Datenauswertung genutzt wird, da er die Häufigkeit von Datenmengen anschaulich darstellt. Bei der Darstellung stellt eine Box in der Mitte 50\% der Messwerte dar und der zur Skala senkrechte Strich in der Mitte der Box stellt den Median der Messwerte dar. Des weiteren stellen die einem "T" \space ähnliche Ausstülpungen aus der zentralen Box je weitere 25\% der Messwerte dar. Schließlich geben einige Punkte abseits des zentralen Grafen Ausreißer der Messreihe an. 
+    %https://datatab.de/tutorial/boxplot    
+
+       
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.75\textwidth]{Bilder/Boxplot_Rohmesswerte.png}
+        \caption{Boxplot-Diagramm der Messreihe}
+        \label{fig:Boxplot-Messwerte}
+    \end{figure}
+
+    In den hier vorliegenden Daten, dargestellt in Abbildung \ref{fig:Boxplot-Messwerte}, befindet sich der Median bei ungefähr 1,0055. Das ist wahrscheinlich der in diesem Fall ungefähr richtige Messwert. Die mittleren 50\% liegen zwischen 1,003 und 1,0075. Das heißt zu 50\% liegt der Fehlerbereich bei nur $\frac{|1,003-1,0055|}{1,0055} \approx 0,25\%$ bzw. $\frac{|1,0075-1,0055|}{1,0055} \approx 0,2\%$. Die unteren 25\% der Messwerte reichen bis 0,9965 und die oberen 25\% reichen bis 1,014. Daher liegt der Fehlerbereich bei fast 100\% der Messungen bei $\frac{|0,9965-1,0055|}{1,0055} \approx 0,9\%$ bzw. $\frac{|1,014-1,0055|}{1,0055} \approx 0,85\%$. Der größte Ausreißer nach unten ist bei 0,992 und der größte Ausreißer nach oben liegt bei 1,017. Damit liegt der maximal Messfehler von 1.000 Messungen bei $\frac{|0,992-1,0055|}{1,0055} \approx 1,3\%$ bzw. $\frac{|1,017-1,0055|}{1,0055} \approx 1,1\%$. 
+
+    Es lässt sich zuerst feststellen, dass der Fehler nach oben generell geringer ist als der Fehler nach unten. Des weiteren liegt der gemessene Median-Wert nicht bei exakt 1, sonder knapp darüber. Das könnte an Konstruktionsfehlern des Sensors MPU-6050 liegen, aber auch daran, dass die Erdbeschleunigung auf der Erde nicht überall gleich ist, sondern an den Polen circa 0,5\% größer ist. %https://www.leifiphysik.de/mechanik/kraft-und-masse-ortsfaktor/aufgabe/gewichtskraft-pol-und-aequator
+    Der gemessene Median-Wert liegt nur $\frac{|1,0055-1|}{1} \approx 0,5\%$ über dem theoretischem Optimalwert. Somit ist der Median ein realistischer gemessener Wert der Beschleunigung. Zuletzt sollte noch dokumentiert werden, dass unter 1.000 Messungen der maximale Fehler bei gerade einmal 1,3\% liegt. Somit ist der unter 1.000 Messungen registrierte maximale Fehler nur 2,5 mal so groß wie der reale Unterschied der Erdbeschleunigung zwischen den Polen und dem Äquator. Daher kann man deklarieren, dass der Sensor MPU-6050 sehr genau die Beschleunigung misst und der Fehler in der Verarbeitung des Messwertes kaum bis gar nicht berücksichtigt werden muss, besonders, da schon eine Abweichung von 25\% integriert ist.
+        
+        \subsubsection{Modellieren}
+        In der nachfolgenden Abbildungen \ref{fig:Modell_Würfel_obenvorne} und \ref{fig:Modell_Würfel_oben}  ist ein Modell des Statuswürfels in TinkerCAD zu erkennen, bei welchen zudem relevante Stellen mit den Nummern 1 bis 9 markiert wurden. Eine auf den Abbildungen \ref{fig:Modell_Würfel_obenvorne} und \ref{fig:Modell_Würfel_oben} erkennbare Skaleneinheit des Bodens, welcher durch die schlechte Auflösung schwer erkennbar ist, steht für einen Millimeter. In Abbildung \ref{fig:Bild_Einzelteile_Statuswürfel} sind zudem die zu beachtenden Komponenten, welche in den Statuswürfel eingebaut werden müssen, dargestellt. Des Weiteren kann das Modell unter einem im Anhang im Ordner Statuswürfel zu findenden Link aufgerufen werden.
+    
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.9\textwidth]{Bilder/Modell-vorne-oben.png}
+        \caption{Modell des Statuswürfels in TinkerCAD}
+        \label{fig:Modell_Würfel_obenvorne}
+    \end{figure}
+
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.9\textwidth]{Bilder/Modell-oben.png}
+        \caption{Modell des Statuswürfels in TinkerCAD von oben}
+        \label{fig:Modell_Würfel_oben}
+    \end{figure}
+
+            Die Zahl 1 in den Abbildungen \ref{fig:Modell_Würfel_obenvorne} und \ref{fig:Modell_Würfel_oben} markiert zuerst die Position, in welcher der ESP32, sichtbar in Abbildung \ref{fig:Bild_Einzelteile_Statuswürfel}, platziert werden soll. In Abbildung \ref{fig:Modell_Würfel_oben} kann man dazu einen Podest erkennen und dazu links und rechts daneben kleine Einkerbungen, in welche die unten herausragenden Stifte der Pins des ESP32 hereinragen können. Der Graben musste dafür 0,5cm tief sein und, da der Boden gesamt nur 0,5cm dick ist, musste ein Podest für den ESP32 modelliert werden, sodass Podest und Graben zusammen eine Höhe von 0,5cm bilden. In Abbildung \ref{fig:Modell_Würfel_obenvorne} ist jedoch die Sicht auf den Podest durch die vordere Seitenwand verdeckt. Immer wenn dies geschieht, ist die Zahl für die Nummer zum einen in Klammern und zum anderen teils transparent geschrieben.
+
+            Die Zahl 2 in den Abbildungen \ref{fig:Modell_Würfel_obenvorne} und \ref{fig:Modell_Würfel_oben} kennzeichnet den Ort, in welchen der MPU-6050, sichtbar in Abbildung \ref{fig:Bild_Einzelteile_Statuswürfel}, eingefügt werden soll. Dieser zeichnet sich durch einen Überhang mit einer Breite von 4mm und einer Höhe von mindestens 6mm aus. Dadurch haben die nach unten zeigenden Stifte freien Entfaltungsraum. Die Stife haben zudem eine Ausdehnung posteriore Richtung des MPU-6050 von ca. 2mm. Daher wurde eine Kuhle modelliert, welche eine Tiefe von 3mm besitzt. Man kann zudem anmerken, dass die Neigung der Schrägen hier sowohl beim Überhang, als auch bei der Kuhle ungefähr 45\textdegree \space betragen, damit die Neigung gedruckt werden kann. 
+
+            Die Zahl 3 ist eine Einkerbung für einen Knopf, welcher auch in der Abbildung \ref{fig:Bild_Einzelteile_Statuswürfel} sichtbar ist. Der Knopf selber hat dabei einen Durchmesser von 4mm, bei einer Höhe von 1mm und das System dahinter hat einen Durchmesser von fast 7mm. Diese Maße wurden dabei in das Modell eingearbeitet. Es musste nur beachtet werden, dass der Knopf von außen sichtbar und drückbar ist, jedoch nicht herausragt und somit nicht unbeabsichtigt gedrückt wird.
+
+            Die Zahl 4 in den Abbildungen \ref{fig:Modell_Würfel_obenvorne} und \ref{fig:Modell_Würfel_oben} markiert den Ort für den Akkumulator, welcher in Abbildung \ref{fig:Bild_Einzelteile_Statuswürfel} beobachtet werden kann. Die Unterteilung in 4a und 4b zeigt bloß, dass dieses Element, wie hier der Akkumulator, in beiden Einzelteilen des Modells berücksichtigt werden musste. Der Akkumulator besitzt die Ausmaße 0,5cm x 6cm x 5cm und am Kabelursprung sogar eine Länge von fast 6,5cm. Um Toleranz zu erschaffen wurde der Boden bei 4a um 1mm abgesenkt, damit eine Höhe von 6,1cm entsteht. Zudem ist der Akkumulator durch 1mm dicke Plastikwände an seinem Platz gesichert.
+
+            Dazu zeigt die Zahl 8 das Modell für die Einkerbung des Kabelursprunges an dem Akkumulator. Diese Einkerbung ist 3mm tief, damit das Kabel derart gebogen werden kann, dass es durch die Einkerbung den ESP32, bzw. dessen "Batterie-Shield", erreichen kann.
+
+            
+
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.5 \textwidth]{Bilder/Bauteile des Statswürfels.jpg}
+        \caption{Die entscheidenden Komponenten des Statuswürfels}
+        \label{fig:Bild_Einzelteile_Statuswürfel}
+    \end{figure}
+    %bis hier stark überarbeiten!!!
+
+            Die Zahl 5 zeigt in den Abbildungen \ref{fig:Modell_Würfel_obenvorne} und \ref{fig:Modell_Würfel_oben} die Öffnung des Statuswürfels für das Verbinden von Mikro-USB-Kabeln mit dem ESP32-D1-Mini oder dem diesem anhängendem "Batterie-Shield", welche beide auch in Abbildung \ref{fig:Bild_Einzelteile_Statuswürfel} dargestellt sind. Die Kabel dafür haben in der Regel eine Breite von 1cm, welche die Größe der Öffnung bestimmt. Zudem wurde wieder darauf geachtet, dass keine zu großen Überhänge modelliert werden, indem das obere Ende der Öffnung eine Schräge von ca. 45\textdegree \space sind.
+
+            Die Zahl 9 zeigt dazu eine Kappe, welche in die Öffnung eingesetzt werden soll, damit kein Kabelzugang von Außen zu dem ESP32 besteht, sondern nur zu dem "Batterie-Shield", welcher zum Aufladen des Akkumulators benutzt werden soll. Das ist besonders für den Endnutzer relevant, welcher keinen Zugriff auf die Programme des ESP32 haben soll.
+
+            Durch die in 6a und 6b modellierten Ausstülpungen bzw. Einkerbungen ist sichergestellt, dass der Statuswürfel nicht falsch rotiert zusammengesteckt werden kann, da sonst die bei 6b herausragenden Ausstülpungen nicht in die bei 6a sichtbare Gegenform passen.
+
+            Zuletzt zeigt die Zahl 7a noch, dass die Kanten abgerundet sind, da sonst durch die Druckereigenschaften bei 7b eine Rundung, statt einer glatten Ecke, nach innen entsteht, wodurch das Zusammenstecken des Statuswürfels fast unmöglich ist.
+            
+        \subsubsection{Zusammenbau}
+    	
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.5 \textwidth]{Bilder/Zussamgebauter Statuswürfel.jpg}
+        \caption{Der Statuswürfel mit eingebauten Komponenten}
+        \label{fig:Bild_Statuswürfel_zusammengebaut}
+    \end{figure}
+        In den gedruckten Würfel wurden darauf die einzelnen Teile des Statuswürfels eingeklebt wie auch in Abbildung \ref{fig:Bild_Statuswürfel_zusammengebaut} ersichtlich ist. In dieser Abbildung ist nochmals der ESP32 mit einer 1 markiert, der Sensor MPU-6050 mit einer 2, der Akkumulator mit einer 3 und zu guter Letzt ist die von außen erreichbare Reset-Taste mit einer 4 gekennzeichnet.
+
+    \subsection{Das E-Ink-Display}
+        Das E-Ink-Display ist mittels der 8 Anschlüsse, die "VCC", "GND", "DIN", "CLK", "CS", "DC", "RST" \space und "BUSY" benannt sind, mit den Pins des ESP32 der Bezeichnungen "3.3V", "GND", $"$IO27", $"$IO25", $"$IO32", "TDI", $"$IO4" und $"$IO0" verbunden.
+        
+        Alle zu dem E-Ink-Display gehörenden Dateien sind im Anhang unter dem Ordner $"$E-Ink-Display$"$ einsehbar. In der Dokumentation werden nur unvollständige und gekürzte Ausschnitte gezeigt. 
+
+    \begin{figure}[ht]
+    \centering
+    \begin{minted}[frame=lines, linenos]{python}
+helper.do_connect()
+newdata = urequests.get(Link + "/statustext", 
+        headers = {'Content-Type':'text/json'}).json()
+newtemp = urequests.get(Link + "/tempstat", 
+        headers = {'Content-Type':'text/json'}).json()
+data=helper.load_data("data.dat")
+temp = helper.load_data("Tempdata.dat")
+if  data["status"] != newdata["status"]:
+    data = newdata
+    temp = newtemp
+    NeuesBild(data, temp)
+elif newdata["status"] == 1 and 
+        temp["Temperatur"] != newtemp["Temperatur"]:
+    tempdata = tempdatenlage # falls sich nur die Temperatur ändert
+    NeuesBild(data, temp)
+if newdata["status"] == 6:
+    machine.deepsleep(300000)
+machine.deepsleep(5000)
+    \end{minted}
+    \caption{Ausschnitt aus "main.py" des E-Ink-Displays}
+    \label{code:E-Ink_Check ob neue Daten}
+    \end{figure}
+    
+    In dem in Abbildung \ref{code:E-Ink_Check ob neue Daten} wiedergegebenen Code ist ähnlich zu dem schon für dem Statuswürfel geschriebenen und in den Abbildungen \ref{code:Werte in main auswerten} und \ref{code:Übertragen der Daten} repräsentierten und dort auch beschriebenen Code. Auch die hier benutzten Dateien "helper.py" und "config.py" fungieren sehr ähnlich zu den schon in den Abbildungen \ref{code:Hepler.py bei Statuswürfel} und \ref{code:config_Statuswürfel} dargestellten Dateien. 
+
+    Zuerst verbindet sich der ESP32, wieder mittels der "helper.py", mit einem WLAN. Darauf werden mittels der $"$urequest.py", dort mittels der $"$usocket"\-Bibliothek, zwei http-GET-Requests mit dem in "config.py" zu findenden Link, mit welcher die API adressiert wird, und jeweils der Spezifikationen $"$$/statustext"$ oder $"$$/tempstat"$ ausgeführt. Diese Requests fordern Daten von der API an und die erhaltenen Daten werden in den Variablen $"newdata"$ sowie $"newtemp"$ gespeichert. Die erhaltenen Daten liegen im json-Dateiformat vor, wobei $"newdata"$ die Eigenschaften $"text"$ sowie $"$$status"$  und  $"newtemp"$ die Eigenschaften $"Temperatur"$ sowie $"TempZusatz"$ besitzt. Die Eigenschaft $"$$status"$  soll der aktuell gemessene Rotationsstatus und die Eigenschaft $"Temperatur"$ die aktuell gemessene Temperatur sein. Die anderen Eigenschaften werden für die Darstellung auf dem E-Ink-Display benötigt. 
+
+    In Zeile 6f der Abbildung \ref{code:E-Ink_Check ob neue Daten} werden die Inhalte der Dateien "data.dat$"$ und "Tempdata.dat$"$ in den Variablen $"data"$ und $"temp"$ gespeichert. Das sind die alten Daten.
+
+    In den restlichen Zeilen wird geprüft, ob sich das angezeigt Bild des E-Ink-Displays ändern soll. Es wird geändert, wenn sich entweder die Eigenschaft $"$$status"$ ändert oder wenn sich beim $"$$status"$ $"1"$ die Temperatur verändert hat. Die Änderung des Bildes wird in der Funktion $"NeuesBild(data, temp)"$ umgesetzt. Dabei werden die neuen Daten dieser Funktion, welche in der nachfolgenden Abbildungen \ref{code:E-Ink-Display_darstellung1} und \ref{code:E-Ink-Display_darstellung2} stark verkürzt dargestellt ist, übergeben.
+
+    Nach der Funktion $"NeuesBild(data, temp)"$ geht der ESP32 in den "deepsleep" \space über um Energie zu sparen. Wie schon bei dem Statuswürfel beträgt die Lange 5 Sekunden, außer der Status $"6"$ ist ausgewählt, worauf der "deepsleep" \space 5 Minuten lang durchgeführt wird.
+
+\begin{figure}[ht]
+    \centering
+    \begin{minted}[frame=lines, linenos]{python}
+def NeuesBild(newdata, newtemp):
+    import framebuf
+    e = epaper4in2.EPD(spi, cs, dc, rst, busy)
+    e.init()
+    if newdata["status"] != 2:
+        buf = bytearray(w * h // 8)
+        fb = framebuf.FrameBuffer(buf, w, h, framebuf.MONO_HLSB)
+        black = 0
+        white = 1
+        fb.fill(white)
+        e.set_display_frame(buf,buf)# Hinergrund wird weiß gefärbt
+    \end{minted}
+    \caption{Teil 1: verkürzte Funktion "NeuesBild()" aus "main.py" des E-Ink-Displays}
+    \label{code:E-Ink-Display_darstellung1}
+    \end{figure}
+
+    Die Funktion $"NeuesBild(newdata, newtemp)"$ verknüpft zunächst die Pin's mit den entsprechenden Funktionen. Daraufhin wird, hier in Abbildung \ref{code:E-Ink-Display_darstellung1} in Zeile 3f ersichtlich, durch die $"$epaper4in2"\space-Bibliothek die Datenübertragung eingeleitet. Dabei werden auch die Pins's übergeben. Alles nun folgende geschieht nur, wenn der neu gemessene Status nicht $"2"$ ist, da sonst ein Bild angezeigt werden soll. 
+    
+    Nun wird ein Bytearray mit so vielen Bits (8 Bits sind ein Byte) erstellt, wie es Pixel auf dem E-Ink-Display gibt (hier $400*300 = 120.000$; $\frac{120.000}{8} = 15.000$). Auf diesen Bytes kann auch die "FrameBuffer"\--Funktion der "framebuf"\--Biblioithek zugreifen. Diese füllt, siehe Zeile 10 der Abbildung \ref{code:E-Ink-Display_darstellung1}, das gesamte Bytearray mit Einsen auf, worauf die $"$epaper4in2"\--Funktion alle Pixel des E-Ink-Displays mit den Bytes auffüllt. Dabei kann jeder Pixel zwei Bits speichern und wird doppelt befüllt, da es ein Wert für die Schwarzfärbung und ein Wert für die Rotfärbung gibt. Der erste $"buf"$ in der Funktion $"$$e.set\_display\_frame(buf,buf)$$"$ ist dabei die potenzielle Schwarzfärbung und der zweite $"buf"$ die potenzielle Rotfärbung, wobei der Wert für den Pixel 0 sein müsste, um zu einer Färbung zu führen.
+
+    \begin{figure}[ht]
+    \centering
+    \begin{minted}[frame=lines, linenos]{python}
+def NeuesBild(newdata, newtemp):
+    if newdata["status"] == 1:
+    elif newdata["status"] == 6:
+    else:
+        tnorm1, tnorm2 = newdata["text"].split("<br>", 1)
+        tnormtemp = str(newtemp["Temperatur"]) + " Grad Celsius"
+        rtc = machine.RTC().datetime()
+        tnormuhr = str(rtc[4]) + ":" + str(rtc[5]) + " Uhr"
+        helper.text_wrap(fb,str(tnorm1),round(w/2 -
+            helper.hufuregel(tnorm1)),50, black, w=300, h=100)
+        helper.text_wrap(fb,str(tnormuhr),round(w -
+            helper.hufuregel(tnormuhr)*2-10),10, black, w=300, h=100)
+        helper.text_wrap(fb,str(tnormtemp),10 ,10, black, w=300, h=100)
+        e.set_display_frame(buf,None)
+        fb.fill(white)
+        fb.rect(round(w/2-helper.hufuregel(tnorm2)-4), 170, 
+            helper.hufuregel(tnorm2)*2+8, 18, black)
+        helper.text_wrap(fb,str(tnorm2),round(w/2 -
+            helper.hufuregel(tnorm2)),175, black, w=300, h=100)
+        e.set_display_frame(None, buf)
+    e.show_display_frame()
+    e.sleep()
+    \end{minted}
+    \caption{Teil 2: verkürzte Funktion "NeuesBild()" aus "main.py" des E-Ink-Displays}
+    \label{code:E-Ink-Display_darstellung2}
+    \end{figure}
+
+    In der Abbildung \ref{code:E-Ink-Display_darstellung2} sieht man die Fortsetzung der Funktion $"NeuesBild(newdata, newtemp)"$. Es wird geprüft, ob der Status eine $"1"$ oder eine $"6"$ ist. Ist dies nicht der Fall, muss der Status eine $"3"$, $"4"$ oder $"5"$ sein. In diesen Fällen passiert das selbe, jedoch mit unterschiedlichen Texten. Dabei wird zuerst der in $"newdata"$ gespeicherte Text an der Sollbruchstelle $"$$<$br$>$$"$ geteilt und die entstehenden Texte in $"tnorm1"$ und $"tnorm2"$ gespeichert. Danach werden noch in Zeile 8 und 9f die Texte für die Temperatur und die Uhrzeit zusammengestellt. 
+
+    Nun werden die einzelnen Texte in den $"buf"$ hineingeschrieben, indem die entsprechenden Bits von einer 1 zu einer 0 geändert werden, wobei die 0 durch die Variable $"black"$ ersetzt wurde. Es werden vorerst die schwarzen Texte, gefolgt von den roten Texten in das E-Ink-Display geschrieben. So werden $"tnorm1"$, der Text für die Temperatur und der Text für die Uhrzeit so in das Framebuf geschrieben, sodass an den Stellen wo der Pixel schwarz sein soll eine 0 steht. Der Text für die Temperatur soll dabei links oben, an der Stelle (10 $|$ 10) (der Pixel [0 $|$ 0] befindet sich links oben auf dem Display), der Text für die Uhrzeit soll bei (400-10 $|$ 10) enden, wodurch die Funktion erschwert wird, da nur er Anfangspunkt angegeben werden kann, und der Text $"tnorm1"$ soll zentriert, was die Funktion deutlich verkompliziert, bei dem Pixel 50 (gemessen von oben) beginnen. Diese Bytes werden nun in Zeile 15 auf das E-Ink-Display auf jeden Pixel in den Bit für die Schwarzfärbung übertragen, während für die Rotfärbung nichts ($"None"$) übertragen wird.
+
+    Darauf wird gesamte Bytearray in Zeile 16 mit Einsen gefüllt und der zweite Text $"tnorm2"$ wird zentriert auf Höhe 175 in Form von Einsen in das Bytearray geschrieben. Zudem wird die einen Pixel breite Umrandung eines Rechteckes in $"buf"$ derart geschrieben, dass die Umrandung an allen Seiten vier Pixel von dem Text entfernt ist. Darauf werden auch diese Bytes in die Pixel des Display übertragen, sodass der Bit für die Rotfärbung geändert wird.
+
+    Zuletzt wird in Zeile 22 das E-Ink-Display aktiviert, wodurch es die neuen Pixel umfärbt. In Zeile 23 geht das E-Ink-Display schließlich wieder in den Ruhemodus über.
+
+    
+        
+
+    \subsection{Die API}
+
+\begin{figure}[ht]
+    \centering
+    \begin{minted}[frame=lines, linenos]{python}
+from fastapi import FastAPI, Path
+from typing_extensions import Annotated
+import sys, help, uvicorn
+
+app = FastAPI()
+
+Startdaten = help.load_data("Daten.dat")
+Temperatur = Startdaten["Temperatur"]
+status = Startdaten["status"]
+TempZusatznachricht = Startdaten["TempZusatznachricht"]
+text = Startdaten["text"]
+
+@app.get("/stat/{val}")
+@app.post("/stat/{val}")
+async def set_status(val: Annotated[int, Path(ge=1, le=6)]):
+    global status, Startdaten
+    status = val
+    Startdaten["status"] = status
+    help.save_data(Startdaten, "Daten.dat")
+    return {"status": status, "message" : "status changed to " + 
+        str(status)}
+
+if __name__ == "__main__":
+    uvicorn.run("main:app", host="0.0.0.0", port=8000)
+    \end{minted}
+    \caption{Ausschnitt der Datei "main.py" der API}
+    \label{code:API-verkürzt}
+    \end{figure}
+
+    In der Abbildung \ref{code:API-verkürzt} wird ein Ausschnitt der Python Datei "main.py" gezeigt, welcher die Funktionalität der API verdeutlicht. Auch dieser Ausschnitt ist verkürzt und die gesamte Datei kann im Anhang im Ordner $"$API$"$ observiert werden. In der Abbildung \ref{code:API-verkürzt} als erstes wird eine Instanz der "FastAPI()"\--Anwendung unter der Variable $"$$app"$ gespeichert.  In den darauf folgenden Zeilen wird diese Instanz genauer in der Funktionsweise definiert. Schließlich in Zeile 23f wird durch die \grqq uvicorn"\--Bibliothek die Instanz $"$$app"$ auf dem Gerät gehostet. Unter "host" wird zudem spezifiziert, dass alle Geräte aus dem lokalem Netzwerk zugreifen können, sowie, dass der Port "8000" \space ist. Somit kann mit der lokalem IP des Gerätes, auf welchem die API ausgeführt wird, und dem Port mit der API in einem üblichen Browser kommunizieren. 
+
+    In Zeile 7ff des in Abbildung \ref{code:API-verkürzt} wiedergegebenen Programmes, werden die in der API gespeicherten Daten geladen. Das geschieht wieder mit einer "help.py", welche sehr ähnlich zu der "helper.py" beim Statuswürfel, abgebildet in Abbildung \ref{code:Hepler.py bei Statuswürfel}, operiert. Die gespeicherten Daten enthalten den derzeit ermittelten Status, sowie die derzeit gemessene Temperatur. Dazu wird zu jedem möglichen Status ein Text gespeichert. Bei Status $"1"$ und $"2"$ ist dieser nicht relevant, bei Status $"6"$ wird der Text dargestellt und bei Status $"3"$, $"4"$ und $"5"$ beinhaltet der Text eine Sollbruchstelle bei $"$$<$br$>$$"$, damit der Text in den oberen und unteren Teil auf dem E-Ink-Display geteilt und daraufhin dargestellt werden kann. Zuletzt speichert die API noch die $"TempZusatznachricht"$, welche für die jeweilige Temperatur eine extra Nachricht bietet, welche in Zustand $"1"$ auf dem E-Ink-Display je nach gemessener Temperatur angezeigt werden soll. So existiert eine für weniger als 0\textdegree C, eine für weniger als 18\textdegree C, eine für weniger als 33\textdegree C, eine für weniger als 50\textdegree C und eine für ab 50\textdegree C.
+
+    In der Abbildung \ref{code:API-verkürzt} kann man beispielhaft eine Funktion der API in Zeile 13ff einsehen. Dabei soll der API der aktuelle Status des Statuswürfels mit einer "GET" oder "PUSH"-Request übertragen werden. Das wird mit der url "http://192.168.178.74:8000/stat/4" beispielsweise umgesetzt. "192.168.178.74:8000" ist dabei die lokale IP der API, gefolgt von dem Port. "/stat/" führt zu der in Zeile 13ff dargestellten Funktion $"set\_status()"$. Der Wert "4" ist die in Zeile 15 unter der Funktion $"set\_status()"$ mit $"val"$ deklarierte Variable. Diese muss wie in Zeile 15 beschrieben zwischen, $"ge=1"$, 1 und, $"le=6"$, 6 sein, da der Status nur zwischen 1 und 6 definiert ist. Darauf wird der neue Status in den Variablen $"status"$ und $"Startdaten"$ geändert und auch die gesicherte Datei "Daten.dat", durch welche anfangs die Daten initialisiert wurden, wird mit dem neuen Rotationszustand überschrieben. Zudem gibt die Funktion (in diesem Beispiel) die Antwort: "\{"status": 4, "message": "status changed to 4"\}".
+
+    Auf diese Art und Weise sind sämtliche Funktionen der API geschrieben. Diese liegen im Anhang in der "main.py" im Unterordner "API" anbei.
+    
+    \subsection{Website}
+
+    In der Abbildung \ref{fig:Websites} sind 3 Website dargestellt, von welchen die zugehörigen html-Datein im Anhang im Unterordner "HTML-Website" zu finden sind. Genauer ist im oberen Teil der Abbildung \ref{fig:Websites} die Datei "Bearbeitung.html", links unten die Datei "main.html" und rechts unten die Datei "index.html" visualisiert. 
+    
+    %nicht viel erklären, Bild zeigen, sagen das geht, aber hier nicht relevant html und ajvascript....
+    \begin{figure}[h]
+        \centering
+        \includegraphics[width=0.75\textwidth]{Bilder/Website.png}
+        \caption{Die 3 Websites für die API}
+        \label{fig:Websites}
+    \end{figure}
+
+    In der "main.py", sichtbar links unten in der Abbildung \ref{fig:Websites}, soll der derzeitige Status des Statuswürfels dargestellt sein und somit den Status mit dem dazu gehörigen Text zeigen, sowie im Status 1 die Temperatur mit dem Temperaturtext. Zudem kann man von "main.py" unter Eingabe des richtigen Benutzernamen und Passwort zu der "Bearbeitung.html" weitergeleitet werden. Dadurch ist der Zugriff auf die "Bearbeitung.html" auf die entsprechenden Administratoren begrenzt.
+
+    In der "Bearbeitung.html", erkennbar oben in der Abbildung \ref{fig:Websites}, kann man jeweils einen Status und einen neuen Text für den entsprechenden Status eingeben. Daraufhin werden die entsprechenden Dateien in der API geändert. Zudem kann der bisherige Text eines Status ausgegeben werden, indem bei dem Eingabefeld für den Status $"$Enter"\space gedrückt wird. Darauf wird in dem darauf folgendem Eingabefeld der Text des eingegebenen Status ausgegeben, welcher so einfacher bearbeitet werden kann.
+
+    Zuletzt ist die "index.html", wahrnehmbar rechts unten in der Abbildung \ref{fig:Websites}, für das Setzen eines neuen Status zuständig. Dabei kann man einen neuen Status in die Eingabezeile eingeben, worauf man auf den "Button", "Click Me TO set state", \space klicken kann und der Status geändert wird. 
+    
+    
+\section{Zusammenfassung und Ausblick}
+\subsection{Zusammenfassung}
+    In der Konzeption wurde viel konzipiert und fast alles davon wurde auch erreicht. Dazu gehört die Programmierung und der Bau eines Akkumulator-betriebenen Statuswürfels, welcher sowohl seinen eigenen Rotationszustand  erkennt, als auch die Außentemperatur misst. Dazu sendet dieser, jedoch nur wenn sich entweder der Rotationszustand oder die Temperatur beim Status "1" verändern, die neuen Messungen an eine API. 
+    
+    Dazu wurde eine API programmiert, welche in der Lage ist die Messungen des Statuswürfels entgegenzunehmen und diese zu speichern. Zudem speichert diese einen Text zu jedem Status, sowie fünf verschiedene Texte für den Wert der Temperatur, je nachdem wie kalt oder warm es ist. Mittels Anfragen können alle diese Daten der API zudem geändert werden.
+
+    Ein Tool um diese Daten, insbesondere der Text zu den Einzelnen Rotationszuständen, einfach ändern zu können ist die Website, welche zum einen den derzeitigen Status, inklusive dazugehörigem Text, darstellen kann, als auch den Status selber ändern kann. Eine Funktion, welche in der Website jedoch noch nicht integriert ist, ist die Änderung des Textes für die Temperatur. Das könnte ähnlich zu der Änderung der Texte zu dem Status erfolgen.
+
+    Zuletzt gibt es noch ein E-Ink-Display, welches mit der Hilfe eine ESP32 die Temperatur und Rotationsdaten, inklusive der dazugehörigen Texte, bei der API anfragt und dadurch zugesandt bekommt. Je nach empfangenen Daten bildet das E-Ink-Display darauf einen Text ab.
+
+    Somit kann ein Mitarbeiter in seinem Büroraum den Statuswürfel drehen, worauf innerhalb von 10 Sekunden (da der "deepsleep" je, sowohl beim Statuswürfel, als auch beim E-Ink-Display, maximal 5 Sekunden andauert) das E-Ink-Display den neuen Arbeitsstatus des Mitarbeiters darstellt.
+
+    Insgesamt wurde fast alles erreicht. Ein kleiner Teil in der Website fehlt und die Option ein Bild einzufügen fehlt völlig. Somit ist es derzeit weder möglich ein Bild über die Website hochzuladen, noch dieses über die API an dem E-Ink-Display projizieren zu lassen, was die Funktionalität und des Sinn des Projektes jedoch kaum einschränkt.
+
+
+\subsection{Ausblick}
+    Eine Funktion, welche perspektivisch integriert werden sollte ist wie schon erwähnt das Bild und das Ändern des Temperatur-Textes. Des weiteren ist das Laden des Statuswürfels durch das Kabel manchmal in der Funktion unpraktisch, da die Rotation durch das Kabel eingeschränkt ist. Besser wäre hier Induktionsladen, durch welches sich der Statuswürfel nur an der richtigen Position über dem Ladegerät befinden muss, um zu einer Ladung zu führen.
+
+    Des Weiteren sollte das Passwort für das WLAN für den ESP32 leichter änderbar sein, anstatt immer eine Datei im ESP32 verändern zu müssen. Das ist bei wechselndem WLAN sehr aufwendig. Zudem ändert sich die lokale IP-Adresse der API häufig, weshalt auch hier immer die Programme der einzelnen Komponenten verändert werden müssen. Auf dieses Problem sollte auch eingegangen werden.
+     
+
+
+
+%\subsection{Ausblick} %Erweiterbarkeit durch mehr Displays
+
+
+\newpage
+\thispagestyle{empty}
+\section{Quellenverzeichnis}
+
+\begin{enumerate}
+\item Author: AZ-Delivery Vertriebs GmbH, Datum: 15.12.2024, Quelle: \url{https://www.az-delivery.de/products/batterie-shield-fuer-lithium-batterien-fuer-d1-mini}
+
+\end{enumerate}
+
+
+\newpage
+%\renewcommand{\listoffigures}{}
+\thispagestyle{empty}
+\listoffigures
+
+
+\newpage
+\thispagestyle{empty}
+\section*{Anlagen}
+In den Anlagen befinden sich nochmals in alle Dateien, welche in der BeLL erwähnt werden. Dazu gehören sämtliche Programme zu dem Statuswürfel, der API, dem E-Ink-Display und der Website, welche in gleichnamigen Ordnern aufgefunden werden können. 
+
+Allgemein liegen die anhängenden Dokumente in der Form einer CD-Rom anbei. Jedoch können alle Dateien auch in einem für die BeLL angelegtem öffentlichen GitHub-Repository unter dem Link \url{https://github.com/Typiano/Git} aufgefunden werden. Das Repository kann auch durch den in Abbildung \ref{fig:QR} dargestellten QR-Code aufgerufen werden.
+\newline
+\newline
+\newline
+
+\begin{figure}[h]
+    \centering
+    \includegraphics[width=0.3\textwidth]{Bilder/BeLL_Statuswürfel-1024.jpeg}
+    \caption{QR-Code zu dem GitHub-Repository}
+    \label{fig:QR}
+\end{figure}
+
+\newpage
+\thispagestyle{empty}
+\section*{Danksagung}
+Zuerst möchte ich mich bei meinem externen Betreuer Phillip Dockhorn bedanken, welcher mir sowohl sämtliches Arbeitsmaterial bzw. sämtliche Hardware zur Verfügung gestellt hat als auch mir jederzeit sämtliche inhaltliche Fragen zur BeLL beantwortet hat. 
+
+Nur durch eine Aktive Unterstützung und wertvollen Hinweise für die BeLL konnte diese beendet werden.
+
+Mein weiterer Dank gilt der HTWK, welche mir auch durch Herrn Dockhorn einen Arbeitsraum zum effizienten Erarbeiten der BeLL zur verfügung stellte. 
+
+Zuletzt möchte ich mich noch bei Herrn Simon Koch bedanken, welcher mir als mein interner Betreuer stets für Fragen zur Verfügung stand. Des Weiterhin hat er mir auch eine ausführlich Rückmeldung zu
+
+\newpage
+\thispagestyle{empty}
+\section*{Selbstständigkeitserklärung}
+Hiermit erkläre ich, dass ich die vorliegende Arbeit selbstständig und ohne unerlaubte fremde Hilfe angefertigt, keine anderen als die angegebenen Quellen und Hilfsmittel verwendet und die den verwendeten Quellen und Hilfsmitteln wörtlich oder inhaltlich entnommenen Stellen als solche kenntlich gemacht habe.
+
+Zusätzlich stimme ich zu, dass diese Arbeit schulintern verwendet werden darf
+\\ \\ \\ \\ \\Leopold Hofmann, Leipzig, \today
+\end{document}
