@@ -1,4 +1,409 @@
-https://www.az-delivery.de/en/products/esp32-d1-mini (zu Datasheet und Pinout)
-https://www.heise.de/tipps-tricks/LaTeX-Bilder-einfuegen-so-geht-s-4404598.html
-https://www.overleaf.com/learn/latex/Learn_LaTeX_in_30_minutes
-https://www.wch.cn/download/CH341SER_ZIP.html
+@article{Alibabachinching,
+    author = {Shenzhen\:Rainbowsemi\:Electronics\:Co.\:Ltd.},
+    title = {D1 mini ESP32 ESP-32 WIFI wireless modul},
+    journal = {\url{https://www.alibaba.com/product-detail/D1-mini-ESP32-ESP-32-WIFI_60783959842.html}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{CH361,
+    author = {NanjingQinhengMicroelectronics},
+    title = {CH341SER.EXE},
+    journal = {\url{https://www.wch.cn/download/ch341ser_exe.html}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{ESP32azdelivery,
+    author = {AZ-Delivery\:Vertrieb\:GmbH},
+    title = {ESP32 mit integriertem WLAN und Bluetooth},
+    journal = {\url{https://www.az-delivery.de/collections/esp32}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{ESP32Wiki,
+    author = {Autoren:\:\url{https://xtools.wmcloud.org/authorship/de.wikipedia.org/ESP32?uselang=de}},
+    title = {ESP32},
+    journal = {\url{https://de.wikipedia.org/wiki/ESP32}},
+    year = {13.09.2024},
+    note = {\lastchecked}
+}
+
+@article{ESP32heiseonline,
+    author = {Anna Kalinowsky},
+    title = {ESP32: Was ist das? Was kann das?},
+    journal = {\url{https://www.heise.de/tipps-tricks/ESP32-Was-ist-das-Was-kann-das-4471527.html}},
+    year = {22.05.2020},
+    note = {\lastchecked}
+}
+
+@article{ESP32Bild,
+    author = {Brian Krent},
+    title = {ESP32-Prozessor (Bildmitte) auf einer Leiterplatte bestückt. Links die gedruckte WLAN-Antenne},
+    journal = {\url{https://de.wikipedia.org/wiki/ESP32#/media/Datei:Espressif_ESP-WROOM-32_Wi-Fi_&_Bluetooth_Module.jpg}},
+    year = {05.04.2017},
+    note = {\lastchecked}
+}
+
+@article{ESPPinoutBild,
+    author = {Codierknecht},
+    title = {-},
+    journal = {\url{https://forum.iobroker.net/topic/69300/probleme-mit-max7210-led-display-festbeleuchtung/20}},
+    year = {18.10.2023},
+    note = {\lastchecked}
+}
+
+@article{Batterie-Shield,
+    author = {AZ-Delivery\:Vertrieb\:GmbH},
+    title = {Battery Shield for lithium batteries for D1 Mini},
+    journal = {\url{https://www.az-delivery.de/en/products/batterie-shield-fuer-lithium-batterien-fuer-d1-mini}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{Batterie-shield-Datenblatt,
+    author = {Alldatasheet.com},
+    title = {TP5400 Datasheet(PDF) 1 Page - Billiton Ltd.},
+    journal = {\url{https://www.alldatasheet.com/html-pdf/1140419/ASIC/TP5400/110/1/TP5400.html}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{MEMS,
+    author = {Elektronik-Kompendium.de},
+    title = {MEMS - Micro-Electro-Mechanical Systems},
+    journal = {\url{https://www.elektronik-kompendium.de/sites/bau/1503041.htm}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{MPU-6050Bild,
+    author = {Nevit Dilmen},
+    title = {Datei:GY-521 MPU-6050 Module 3 Axis Gyroscope + Accelerometer 0487.jpg},
+    journal = {\url{https://de.m.wikipedia.org/wiki/Datei:GY-521_MPU-6050_Module_3_Axis_Gyroscope_+_Accelerometer_0487.jpg}},
+    year = {2014},
+    note = {\lastchecked}
+}
+
+@article{MPU-6050Datasheet,
+    author = {InvenSense\:Inc.},
+    title = {MPU-6000 and MPU-6050 Product Specification Revision 3.4},
+    journal = {\url{https://invensense.tdk.com/wp-content/uploads/2015/02/MPU-6000-Datasheet1.pdf}},
+    year = { 19.08.2013},
+    note = {\lastchecked}
+}
+
+@article{MEMS-Accelerometer,
+    author = {John},
+    title = {MEMS Accelerometer},
+    journal = {\url{https://www.instrumentationtoday.com/mems-accelerometer/2011/08/}},
+    year = {17.08.2011},
+    note = {\lastchecked}
+}
+
+@article{MEMS-Gyroskop,
+    author = {Farnell\:GmbH},
+    title = {Gyroskope},
+    journal = {\url{https://de.farnell.com/sensor-gyroscope-technology}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{Thermometer,
+    author = {Günther\:GmbH},
+    title = {Günther GmbH Temperaturmesstechnik | Technische Informationen zu Widerstandsthermometern},
+    journal = {\url{https://www.mts.ch/produkte-messtechnik-schaffhausen-gmbh/guenther-gmbh-temperaturmesstechnik-thermoelemente\--widerstandsthermometer/technische-informationen/technische\--informationen-zu-widerstandsthermometern/1-aufbau-und-funktionsweise-von-widerstandsthermometern.html/280}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{I2C,
+    author = {HEINEN\:Elektronik\:GmbH},
+    title = {I2C},
+    journal = {\url{https://heinen-elektronik.de/glossar/I2C/}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{I2C-2,
+    author = {Digital\:Matter\:2024},
+    title = {I2C Sensorüberwachung},
+    journal = {\url{https://sense.digitalmatter.com/de/blog/I2C-sensor-monitoring}},
+    year = {20.08.2024},
+    note = {\lastchecked}
+}
+
+@article{I2Cfast,
+    author = {telos\:Systementwicklung\:GmbH},
+    title = {Fast Mode},
+    journal = {\url{https://de.i2c-bus.org/fast-mode/}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{I2Cfaster,
+    author = {telos\:Systementwicklung\:GmbH},
+    title = {Ultra Fast Mode UFm},
+    journal = {\url{https://www.i2c-bus.org/ultra-fast-mode-ufm/}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{3D-Druck,
+    author = {FKM\:Sintertechnik\:GmbH},
+    title = {Was ist der 3D-Druck?},
+    journal = {\url{https://www.fkm.net/was-ist-der-3d-druck/}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{Modellierung,
+    author = {Prusa\:Research\:a.s.},
+    title = {Modellierung mit Blick auf 3D-Druck},
+    journal = {\url{https://help.prusa3d.com/de/article/modellierung-mit-blick-auf-3d-druck_164135}},
+    year = {zuletzt Aktualisiert: 2020},
+    note = {\lastchecked}
+}
+
+@article{TinkerCAD,
+    author = {Autodesk,\:Inc.},
+    title = {TinkerCAD},
+    journal = {\url{https://www.tinkercad.com}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{API,
+    author = {Talend\:Germany\:GmbH},
+    title = {API (Application Programming Interface) — Definition und Vorteile},
+    journal = {\url{https://www.talend.com/de/resources/was-ist-eine-api/}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{fastAPI,
+    author = {fastapi},
+    title = {FastAPI},
+    journal = {\url{https://fastapi.tiangolo.com/}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{uvicorn,
+    author = {uvicorn},
+    title = {uvicorn},
+    journal = {\url{https://www.uvicorn.org}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{API-REST,
+    author = {appleute\:GmbH},
+    title = {Was ist eine REST-API?},
+    journal = {\url{https://www.appleute.de/app-entwickler-bibliothek/was-ist-rest-api/}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{html,
+    author = {Tim Aschermann},
+    title = {Was ist HTML? - Verständlich erklärt},
+    journal = {\url{https://praxistipps.chip.de/was-ist-html-verstaendlich-erklaert_40979}},
+    year = {16.05.2015},
+    note = {\lastchecked}
+}
+
+@article{IP-Adresse,
+    author = {Kaspersky\:Labs\:GmbH},
+    title = {IP-Adresse – Definition und Erläuterung},
+    journal = {\url{https://www.kaspersky.de/resource-center/definitions/what-is-an-ip-address}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{http,
+    author = {XOVI\:GmbH},
+    title = {Was bedeutet HTTP?},
+    journal = {\url{https://www.xovi.de/was-bedeutet-http/}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{SSL-http2,
+    author = {DigiCert\:Inc.},
+    title = {Was sind SSL, TLS und HTTPS?},
+    journal = {\url{https://www.digicert.com/de/what-is-ssl-tls-and-https}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{http3-getvspost,
+    author = {IONOS Redaktion},
+    title = {GET vs. POST – die beiden wichtigsten HTTP-Requests im Vergleich},
+    journal = {\url{https://www.ionos.de/digitalguide/websites/web-entwicklung/get-vs-post/}},
+    year = {06.04.2020},
+    note = {\lastchecked}
+}
+
+@article{E-InkBild,
+    author = {Waveshare},
+    title = {400x300, 4.2inch E-Ink display module, three-color},
+    journal = {\url{https://www.waveshare.com/4.2inch-e-paper-module-b.htm}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{E-InkDatasheet,
+    author = {waveshare},
+    title = {4.2inch-e-paper-specification.pdf},
+    journal = {\url{https://www.waveshare.com/w/upload/6/6a/4.2inch-e-paper-specification.pdf}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{E-InkMehrFarben,
+    author = {Anna Rybalko},
+    title = {E Ink: Die Evolution der Farbtechnologie},
+    journal = {\url{https://www.elektroniknet.de/optoelektronik/displays/e-ink-die-evolution-der-farbtechnologie.215070.html}},
+    year = {08.03.2024},
+    note = {\lastchecked}
+}
+
+@article{E-Ink1,
+    author = {Dr. Guido Schryen. Dipl.-Kfm. Jürgen Karla},
+    title = {Elektronisches Papier Displaytechnologie mit weitem Anwendungsspektrum},
+    journal = {\url{https://epub.uni-regensburg.de/21255/}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{E-Ink2,
+    author = {Achim Hannemann},
+    title = {E-Paper: Unterschätzte Displaytechnologie?},
+    journal = {\url{https://www.professional-system.de/basics/e-paper-unterschaetzte-displaytechnologie/}},
+    year = {11.03.2022},
+    note = {\lastchecked}
+}
+
+@article{MicroPython,
+    author = {George\:Robotics\:Limited},
+    title = {MicroPython},
+    journal = {\url{https://micropython.org}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{Micropython-2,
+    author = {SunFounder},
+    title = {1.1 Einführung in MicroPython},
+    journal = {\url{https://docs.sunfounder.com/projects/kepler-kit/de/latest/pyproject/python_start/introduction_micropython.html}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{Thonny,
+    author = {Thonny},
+    title = {Thonny-Python IDE for beginners},
+    journal = {\url{https://thonny.org}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{GitHub,
+    author = {GitHub,\:Inc.},
+    title = {Home},
+    journal = {\url{https://github.com}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{Git,
+    author = {Atlassian\:Trust\:Center},
+    title = {Was ist Git?},
+    journal = {\url{https://www.atlassian.com/de/git/tutorials/what-is-git}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{GitBefehle,
+    author = {Atlassian\:Trust\:Center},
+    title = {Befehle},
+    journal = {\url{https://www.atlassian.com/de/git/glossary#commands}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{Netzwerktopologie,
+    author = {Alexander S. Gillis},
+    title = {Netzwerktopologie},
+    journal = {\url{https://www.computerweekly.com/de/definition/Netzwerktopologie}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{Graphentheorie,
+    author = {Dennis Kerzig},
+    title = {Graphentheorie},
+    journal = {\url{https://hpi.de/friedrich/teaching/units/graphentheorie.html}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{CAD,
+    author = {PTC},
+    title = {What is CAD?},
+    journal = {\url{https://www.ptc.com/en/technologies/cad}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{usocket,
+    author = {Damien P. George. Paul Sokolovsky},
+    title = {usocket – socket module},
+    journal = {\url{https://docs.micropython.org/en/v1.14/library/usocket.html}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{urequests,
+    author = {Damien P. George. Paul Sokolovsky. Yan Minge},
+    title = {urequests — Network Request Module},
+    journal = {\url{https://makeblock-micropython-api.readthedocs.io/en/latest/public_library/Third-party-libraries/urequests.html}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+
+@article{framebuf,
+    author = {MicroPython},
+    title = {framebuf — frame buffer manipulation},
+    journal = {\url{https://docs.micropython.org/en/latest/library/framebuf.html}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+
+@article{Zweierkomplement,
+    author = {Thorsten Thormählen},
+    title = {Technische Informatik Rechnerinterne Zahlenformate},
+    journal = {\url{https://www.mathematik.uni-marburg.de/~thormae/lectures/ti1/ti_2_2_ger_web.html}},
+    year = {27.10.2022},
+    note = {\lastchecked}
+}
+
+@article{machine,
+    author = {MicroPython},
+    title = {machine — functions related to the hardware},
+    journal = {\url{https://docs.micropython.org/en/latest/library/machine.html}},
+    year = {o.D.},
+    note = {\lastchecked}
+}
+
+@article{network,
+    author = {MicroPython},
+    title = {4. Network basics},
+    journal = {\url{https://docs.micropython.org/en/latest/esp8266/tutorial/network_basics.html}},
+    year = {o.D.},
+    note = {\lastchecked}
+}

@@ -41,7 +41,7 @@ async def ret_stat_Temp():
     elif Temperatur < 50:
         k = "heiss"
     else:
-        k = "kochend"
+        k = "sehrheiss"
     return {"Temperatur": Temperatur, "TempZusatz": TempZusatznachricht[k]}
 
 @app.post("/tempstat/{temp}")
@@ -60,7 +60,7 @@ async def set_stat_Temp(temp: Annotated[float, Path(ge=-50, le=100)]):
     elif temp < 50:
         k = "heiss"
     else:
-        k = "kochend"
+        k = "sehrheiss"
     return {"Temperatur": Temperatur, "TempZusatz": TempZusatznachricht[k]}
 
 
@@ -93,4 +93,4 @@ async def get_text(nmbr: Annotated[int, Path(ge=0, le=6)]):
 
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8001, log_level="info")
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, log_level="info")
