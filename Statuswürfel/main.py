@@ -24,17 +24,17 @@ def getAnswer():
     Tmp = round(2*(wert1["Tmp"]+wert2["Tmp"]+wert3["Tmp"])/3, 0)/2 # um auf 0,5 zu Runden
     #print(str(x) + "  " + str(y) + " " + str(z))
     
-    if x >= 0.7 and -0.3 < y < 0.3 and -0.3 < z < 0.3:
+    if x >= 0.75 and -0.25 < y < 0.25 and -0.25 < z < 0.25:
         ausgabewert = "1" # oben = oben
-    elif x <= -0.7 and -0.3 < y < 0.3 and -0.3 < z < 0.3:
+    elif x <= -0.75 and -0.25 < y < 0.25 and -0.25 < z < 0.25:
         ausgabewert = "6"# unten = oben
-    elif z <= -0.7 and -0.3 < y < 0.3 and -0.3 < x < 0.3:
+    elif z <= -0.75 and -0.25 < y < 0.25 and -0.25 < x < 0.25:
         ausgabewert = "4"# links = oben
-    elif z >= 0.7 and -0.3 < y < 0.3 and -0.3 < x < 0.3:
+    elif z >= 0.75 and -0.25 < y < 0.25 and -0.25 < x < 0.25:
         ausgabewert = "3"# rechts = oben
-    elif y <= -0.7 and -0.3 < x < 0.3 and -0.3 < z < 0.3:
+    elif y <= -0.75 and -0.25 < x < 0.25 and -0.25 < z < 0.25:
         ausgabewert = "5"# hinten = oben
-    elif y >= 0.7 and -0.3 < x < 0.3 and -0.3 < z < 0.3:
+    elif y >= 0.75 and -0.25 < x < 0.25 and -0.25 < z < 0.25:
         ausgabewert = "2"# vorne = oben
     else:
         return None# nichts konkretes = oben
